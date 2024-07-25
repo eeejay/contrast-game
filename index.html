@@ -3,8 +3,8 @@
 <head>
     <style>
         #button {
-            background-color: red;
-            color: yellow;
+            /* background-color: red;
+            color: yellow; */
             border: none;
             border-radius: 3px;
             padding: 2em;
@@ -63,9 +63,9 @@
             return generateColorPair((contrast) => contrast < 4.5);
         }
 
-        function adjustColor(evt) {
+        function adjustColor(button) {
             const [bg, fg] = (() => {
-                switch (Math.floor(Math.random()*3)) {
+                switch (Math.floor(Math.random() * 3)) {
                     case 0:
                         return generateAAA();
                     case 1:
@@ -75,15 +75,27 @@
                 }
             })();
             const contrast = calcContrast(bg, fg);
-            evt.target.style.backgroundColor = `rgb(${bg.join(',')})`;
-            evt.target.style.color = `rgb(${fg.join(',')})`;
-            document.getElementById("contrast").textContent = contrast.toFixed(2);
+            button.style.backgroundColor = `rgb(${bg.join(',')})`;
+            button.style.color = `rgb(${fg.join(',')})`;
+            button.dataset.contrast = contrast.toFixed(2);
             if (contrast > 7) {
-                document.getElementById("rating").textContent = "AAA";
+                button.dataset.rating = "AAA";
             } else if (contrast > 4.5) {
-                document.getElementById("rating").textContent = "AA";
+                button.dataset.rating = "AA";
             } else {
-                document.getElementById("rating").textContent = "FAIL";
+                button.dataset.rating = "FAIL";
+            }
+            for (let radio of document.querySelectorAll("input[type='radio']")) {
+                radio.checked = false;
+            }
+        }
+
+        function answerSelected(evt) {
+            let button = document.getElementById("button");
+            if (evt.target.value == button.dataset.rating) {
+                console.log(`Correct!!! The rating for ${button.dataset.contrast} is '${button.dataset.rating}'`);
+            } else {
+                console.log(`Wrong! The rating is '${button.dataset.rating}' (${button.dataset.contrast})`);
             }
         }
     </script>
@@ -91,9 +103,17 @@
 
 <body>
     <button id="button">Hello world</button>
-    <div><span id="contrast"></span> <span id="rating"></span></div>
+    <input type="radio" name="contrast" id="fail" value="FAIL" /><label for="fail">FAIL</label>
+    <input type="radio" name="contrast" id="aa" value="AA" /><label for="aa">AA</label>
+    <input type="radio" name="contrast" id="aaa" value="AAA" /><label for="aaa">AAA</label>
+    <!-- <div><span id="contrast"></span> <span id="rating"></span></div> -->
     <script>
-        document.getElementById("button").addEventListener("click", adjustColor);
+        document.getElementById("button").addEventListener("click", evt => adjustColor(evt.target));
+        for (let radio of document.querySelectorAll("input[type='radio']")) {
+            console.log(radio);
+            radio.addEventListener("change", answerSelected);
+        }
+        adjustColor(document.getElementById("button"));
     </script>
 </body>
 
