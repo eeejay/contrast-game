@@ -9,6 +9,13 @@
             border-radius: 3px;
             padding: 2em;
             font-size: larger;
+            width: 100%;
+            border-radius: 100%;
+        }
+
+        body>div {
+            margin: auto;
+            width: 128px;
         }
     </style>
     <script>
@@ -102,19 +109,23 @@
 </head>
 
 <body>
-    <button id="button">Hello world</button>
-    <input type="radio" name="contrast" id="fail" value="FAIL" /><label for="fail">FAIL</label>
-    <input type="radio" name="contrast" id="aa" value="AA" /><label for="aa">AA</label>
-    <input type="radio" name="contrast" id="aaa" value="AAA" /><label for="aaa">AAA</label>
-    <!-- <div><span id="contrast"></span> <span id="rating"></span></div> -->
-    <script>
-        document.getElementById("button").addEventListener("click", evt => adjustColor(evt.target));
-        for (let radio of document.querySelectorAll("input[type='radio']")) {
-            console.log(radio);
-            radio.addEventListener("change", answerSelected);
-        }
-        adjustColor(document.getElementById("button"));
-    </script>
+    <div>
+        <button id="button">Hello world</button>
+        <p>
+            <input type="radio" name="contrast" id="fail" value="FAIL" /><label for="fail">FAIL</label><br>
+            <input type="radio" name="contrast" id="aa" value="AA" /><label for="aa">AA</label><br>
+            <input type="radio" name="contrast" id="aaa" value="AAA" /><label for="aaa">AAA</label>
+        </p>
+        <!-- <div><span id="contrast"></span> <span id="rating"></span></div> -->
+        <script>
+            document.getElementById("button").addEventListener("click", evt => adjustColor(evt.target));
+            for (let radio of document.querySelectorAll("input[type='radio']")) {
+                console.log(radio);
+                radio.addEventListener("change", answerSelected);
+            }
+            adjustColor(document.getElementById("button"));
+        </script>
+    </div>
 </body>
 
 </html>
