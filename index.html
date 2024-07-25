@@ -1,0 +1,100 @@
+<html>
+
+<head>
+    <style>
+        #button {
+            background-color: red;
+            color: yellow;
+            border: none;
+            border-radius: 3px;
+            padding: 2em;
+            font-size: larger;
+        }
+    </style>
+    <script>
+        const RED = 0.2126;
+        const GREEN = 0.7152;
+        const BLUE = 0.0722;
+
+        const GAMMA = 2.4;
+
+        function luminance(r, g, b) {
+            let a = [r, g, b].map((v) => {
+                v /= 255;
+                return v <= 0.03928
+                    ? v / 12.92
+                    : Math.pow((v + 0.055) / 1.055, GAMMA);
+            });
+            return a[0] * RED + a[1] * GREEN + a[2] * BLUE;
+        }
+
+        function calcContrast(rgb1, rgb2) {
+            let lum1 = luminance(...rgb1);
+            let lum2 = luminance(...rgb2);
+            let brightest = Math.max(lum1, lum2);
+            let darkest = Math.min(lum1, lum2);
+            return (brightest + 0.05) / (darkest + 0.05);
+        }
+
+        function randomColor() {
+            return [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)]
+        }
+
+        function generateColorPair(req = (c) => true) {
+            while (true) {
+                const bg = randomColor();
+                const fg = randomColor();
+                const contrast = calcContrast(bg, fg);
+                if (req(contrast)) {
+                    return [bg, fg];
+                }
+            }
+        }
+
+        function generateAAA() {
+            return generateColorPair((contrast) => contrast >= 7);
+        }
+
+        function generateAA() {
+            return generateColorPair((contrast) => contrast < 7 && contrast >= 4.5);
+        }
+
+        function generateFail() {
+            return generateColorPair((contrast) => contrast < 4.5);
+        }
+
+        function adjustColor(evt) {
+            const [bg, fg] = (() => {
+                switch (Math.floor(Math.random()*3)) {
+                    case 0:
+                        return generateAAA();
+                    case 1:
+                        return generateAA();
+                    case 2:
+                        return generateFail();
+                }
+            })();
+            const contrast = calcContrast(bg, fg);
+            evt.target.style.backgroundColor = `rgb(${bg.join(',')})`;
+            evt.target.style.color = `rgb(${fg.join(',')})`;
+            document.getElementById("contrast").textContent = contrast.toFixed(2);
+            if (contrast > 7) {
+                document.getElementById("rating").textContent = "AAA";
+            } else if (contrast > 4.5) {
+                document.getElementById("rating").textContent = "AA";
+            } else {
+                document.getElementById("rating").textContent = "FAIL";
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <button id="button">Hello world</button>
+    <div><span id="contrast"></span> <span id="rating"></span></div>
+    <script>
+        document.getElementById("button").addEventListener("click", adjustColor);
+    </script>
+</body>
+
+</html>
