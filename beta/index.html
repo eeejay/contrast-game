@@ -47,7 +47,7 @@
     #game-over {
         display: none;
         position: absolute;
-        top: 50%;
+        top: 40%;
         left: 50%;
         transform: translate(-50%, -50%);
         font-size: 40px;
@@ -58,7 +58,7 @@
     #reset-btn {
         display: none;
         position: absolute;
-        top: 60%;
+        top: 75%;
         left: 50%;
         transform: translate(-50%, -50%);
         font-size: 24px;
@@ -69,6 +69,21 @@
         border: none;
         border-radius: 5px;
         cursor: pointer;
+    }
+    #chosen-option {
+        display: none;
+        position: absolute;
+        top: 60%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 24px;
+        font-family: 'Arial', sans-serif;
+        color: #000;
+        background-color: #fff;
+        padding: 10px;
+        border: 2px solid #000;
+        border-radius: 5px;
+        text-align: center;
     }
     @keyframes shimmer {
         0%, 100% {
@@ -126,12 +141,28 @@
         padding: 5px;
         font-size: 16px;
     }
+    #timer-container {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 24px;
+        font-family: 'Arial', sans-serif;
+        color: #000;
+        border: 5px solid #000;
+        border-radius: 50%;
+    }
     </style>
 </head>
 <body>
     <div id="game-container">
         <div id="score">Score: 0</div>
         <div id="game-over">Game over!</div>
+        <div id="chosen-option"></div>
         <button id="reset-btn">Reset Game</button>
         <div id="debug-info">Contrast Ratio: N/A</div>
         <button id="debug-btn">Debug Mode</button>
@@ -139,6 +170,9 @@
             <button id="fail-btn">Fail</button>
             <button id="aa-btn">AA</button>
             <button id="aaa-btn">AAA</button>
+        </div>
+        <div id="timer-container">
+            <span id="timer-text">10</span>
         </div>
     </div>
 
@@ -168,7 +202,7 @@
         }
 
         function randomColor() {
-            return [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)]
+            return [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)];
         }
 
         function generateColorPair(req = (c) => true) {
@@ -295,6 +329,7 @@
             currentGumball = createGumball(250, 150, bgColor, fgColor, 80); // Lowered initial position and doubled size
             Body.setStatic(currentGumball, true);
             World.add(engine.world, currentGumball);
+            resetTimer(); // Reset the timer for each new gumball
             if (debugMode) {
                 document.getElementById('debug-info').textContent = `Contrast Ratio: ${currentContrast.toFixed(2)}`;
             }
@@ -341,12 +376,25 @@
             }
         }
 
-        function gameOver() {
+        function gameOver(userChoice) {
             document.getElementById('game-over').style.display = 'block';
             document.getElementById('reset-btn').style.display = 'block';
+            document.getElementById('chosen-option').style.display = 'block';
             document.getElementById('fail-btn').disabled = true;
             document.getElementById('aa-btn').disabled = true;
             document.getElementById('aaa-btn').disabled = true;
+            clearInterval(interval); // Stop the timer
+
+            let contrastDesignation = '';
+            if (currentContrast < 4.5) {
+                contrastDesignation = 'Fail';
+            } else if (currentContrast < 7) {
+                contrastDesignation = 'AA';
+            } else {
+                contrastDesignation = 'AAA';
+            }
+
+            document.getElementById('chosen-option').innerHTML = `You chose: ${userChoice}.<br>Actual contrast: ${currentContrast.toFixed(2)} (${contrastDesignation})`;
         }
 
         document.getElementById('reset-btn').addEventListener('click', () => {
@@ -363,33 +411,27 @@
         document.getElementById('fail-btn').addEventListener('click', () => {
             if (correctButton === 'fail-btn') {
                 dropCurrentGumball();
-                const btn = document.getElementById('fail-btn');
-                btn.classList.add('shimmer');
-                setTimeout(() => btn.classList.remove('shimmer'), 600);
+                resetTimer(); // Reset the timer for the next gumball
             } else {
-                gameOver();
+                gameOver('Fail');
             }
         });
 
         document.getElementById('aa-btn').addEventListener('click', () => {
             if (correctButton === 'aa-btn') {
                 dropCurrentGumball();
-                const btn = document.getElementById('aa-btn');
-                btn.classList.add('shimmer');
-                setTimeout(() => btn.classList.remove('shimmer'), 600);
+                resetTimer(); // Reset the timer for the next gumball
             } else {
-                gameOver();
+                gameOver('AA');
             }
         });
 
         document.getElementById('aaa-btn').addEventListener('click', () => {
             if (correctButton === 'aaa-btn') {
                 dropCurrentGumball();
-                const btn = document.getElementById('aaa-btn');
-                btn.classList.add('shimmer');
-                setTimeout(() => btn.classList.remove('shimmer'), 600);
+                resetTimer(); // Reset the timer for the next gumball
             } else {
-                gameOver();
+                gameOver('AAA');
             }
         });
 
@@ -400,6 +442,41 @@
                 document.getElementById('debug-info').textContent = `Contrast Ratio: ${currentContrast.toFixed(2)}`;
             }
         });
+
+        let timerDuration = 10; // Initial duration in seconds
+        let interval;
+        let gumballCount = 0;
+
+        function startTimer(duration) {
+            clearInterval(interval);
+            let timeLeft = duration;
+            const timerText = document.getElementById('timer-text');
+
+            interval = setInterval(() => {
+                timeLeft -= 0.1;
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    gameOver('Time Up');
+                } else {
+                    timerText.textContent = timeLeft.toFixed(1);
+                }
+            }, 100);
+        }
+
+        function resetTimer() {
+            let newDuration;
+            gumballCount++;
+            if (gumballCount <= 5) {
+                newDuration = 10;
+            } else if (gumballCount <= 8) {
+                newDuration = 7.5;
+            } else if (gumballCount <= 11) {
+                newDuration = 5;
+            } else {
+                newDuration = 3;
+            }
+            startTimer(newDuration);
+        }
 
         createNewGumball();
     </script>
