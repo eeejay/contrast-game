@@ -211,6 +211,7 @@
     <script>
         let debugMode = false;
         let cheatMode = location.hash == "#cheat";
+        const ballOverlap = 10;
 
         const RED = 0.2126;
         const GREEN = 0.7152;
@@ -284,19 +285,19 @@
         const jarBottomThickness = 20;
         const cornerRadius = 30;
 
-        const bottom = Bodies.rectangle(250, 650, jarWidth, jarBottomThickness, { 
+        const bottom = Bodies.rectangle(250, 650, jarWidth, jarBottomThickness + ballOverlap, { 
             elem: document.getElementById("jar-bottom"),
             isStatic: true,
             scaleFactor: 1,
         });
 
-        const leftWall = Bodies.rectangle(50, 400, wallThickness, jarHeight, {
+        const leftWall = Bodies.rectangle(50, 400, wallThickness + ballOverlap, jarHeight, {
             elem: document.getElementById("jar-leftWall"),
             scaleFactor: 1,
             isStatic: true,
         });
 
-        const rightWall = Bodies.rectangle(450, 400, wallThickness, jarHeight, {
+        const rightWall = Bodies.rectangle(450, 400, wallThickness + ballOverlap, jarHeight, {
             elem: document.getElementById("jar-rightWall"),
             scaleFactor: 1,
             isStatic: true,
@@ -341,7 +342,7 @@
             gumballElem.style.color = `rgb(${fgColor.join(',')})`;
             gumballElem.textContent = "Test text";
             document.getElementById("sandbox").appendChild(gumballElem);
-            const gumball = Bodies.circle(x, y, radius, {
+            const gumball = Bodies.circle(x, y, radius - ballOverlap, {
                 elem: gumballElem,
                 restitution: 0.5,
                 friction: 0.005,
