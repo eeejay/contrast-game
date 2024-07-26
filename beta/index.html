@@ -142,21 +142,6 @@
         font-size: 16px;
         top: 0;
     }
-    #timer-container {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        width: 80px;
-        height: 80px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 24px;
-        font-family: 'Arial', sans-serif;
-        color: #000;
-        border: 5px solid #000;
-        border-radius: 50%;
-    }
 
     #sandbox {
         width: 500px;
@@ -180,12 +165,25 @@
     }
 
     #sandbox .gumball {
-        width: 160px;
-        height: 160px;
+        width: 180px;
+        height: 180px;
         border-radius: 50%;
         display: flex;
         justify-content: center;
         align-items: center;
+    }
+
+    #sandbox .gumball.current {
+        background: conic-gradient(#000 calc(var(--time-left)*1%),#0000 0);
+    }
+
+    #sandbox .gumball:after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        inset: 10px;
+        background-color: var(--gumball-bg);
+        z-index: -1;
     }
     </style>
 </head>
@@ -207,14 +205,12 @@
             <button id="aa-btn">AA</button>
             <button id="aaa-btn">AAA</button>
         </div>
-        <div id="timer-container">
-            <span id="timer-text">10</span>
-        </div>
 
     </div>
 
     <script>
         let debugMode = false;
+        let cheatMode = location.hash == "#cheat";
 
         const RED = 0.2126;
         const GREEN = 0.7152;
@@ -339,7 +335,9 @@
         function createGumball(x, y, bgColor, fgColor, radius = 20) {
             let gumballElem = document.createElement("div");
             gumballElem.classList.add("gumball");
-            gumballElem.style.backgroundColor = `rgb(${bgColor.join(',')})`;
+            gumballElem.classList.add("current");
+            gumballElem.style.setProperty('--gumball-bg', `rgb(${bgColor.join(',')})`);
+            gumballElem.style.setProperty('--time-left', `100`);
             gumballElem.style.color = `rgb(${fgColor.join(',')})`;
             gumballElem.textContent = "Test text";
             document.getElementById("sandbox").appendChild(gumballElem);
@@ -368,6 +366,9 @@
                     correctButton = 'fail-btn';
                     break;
             }
+            if (cheatMode) {
+                console.log(correctButton);
+            }
             return [bgColor, fgColor];
         }
 
@@ -386,6 +387,7 @@
             if (currentGumball) {
                 let scale = 1;
                 const scaleStep = 2 / 15;
+                currentGumball.elem.classList.remove("current");
                 const interval = setInterval(() => {
                     scale -= scaleStep;
                     if (scale <= 0.15) {
@@ -489,37 +491,35 @@
             }
         });
 
-        let timerDuration = 10; // Initial duration in seconds
         let interval;
         let gumballCount = 0;
 
         function startTimer(duration) {
             clearInterval(interval);
             let timeLeft = duration;
-            const timerText = document.getElementById('timer-text');
-
             interval = setInterval(() => {
-                timeLeft -= 0.1;
+                timeLeft -= 16;
+                if (currentGumball) {
+                    currentGumball.elem.style.setProperty('--time-left', (timeLeft/duration) * 100);
+                }
                 if (timeLeft <= 0) {
                     clearInterval(interval);
                     gameOver('Time Up');
-                } else {
-                    timerText.textContent = timeLeft.toFixed(1);
                 }
-            }, 100);
+            }, 16);
         }
 
         function resetTimer() {
             let newDuration;
             gumballCount++;
             if (gumballCount <= 5) {
-                newDuration = 10;
+                newDuration = 10000;
             } else if (gumballCount <= 8) {
-                newDuration = 7.5;
+                newDuration = 7500;
             } else if (gumballCount <= 11) {
-                newDuration = 5;
+                newDuration = 5000;
             } else {
-                newDuration = 3;
+                newDuration = 3000;
             }
             startTimer(newDuration);
         }
