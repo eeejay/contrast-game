@@ -140,6 +140,7 @@
         color: white;
         padding: 5px;
         font-size: 16px;
+        top: 0;
     }
     #timer-container {
         position: absolute;
@@ -156,11 +157,46 @@
         border: 5px solid #000;
         border-radius: 50%;
     }
+
+    #sandbox {
+        width: 500px;
+        height: 700px;
+    }
+
+    #sandbox > div {
+        translate: -50% -50%;
+        position: absolute;
+    }
+
+
+    #sandbox .jar {
+        background-color: #D3D3D3;
+    }
+
+    #sandbox .jar.side {
+        border-bottom-left-radius: 40px;
+        border-bottom: solid #D3D3D3 20px;
+        border-bottom-right-radius: 40px;
+    }
+
+    #sandbox .gumball {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
     </style>
 </head>
 <body>
     <div id="game-container">
         <div id="score">Score: 0</div>
+        <div id="sandbox">
+            <div class="jar" id="jar-bottom" style="left: 250px; top: 650px; height: 20px; width: 400px;"></div>
+            <div class="jar side" id="jar-leftWall" style="left: 50px; top: 400px; height: 500px; width: 20px;"></div>
+            <div class="jar side" id="jar-rightWall" style="left: 450px; top: 400px; height: 500px; width: 20px;"></div>
+        </div>
         <div id="game-over">Game over!</div>
         <div id="chosen-option"></div>
         <button id="reset-btn">Reset Game</button>
@@ -174,9 +210,12 @@
         <div id="timer-container">
             <span id="timer-text">10</span>
         </div>
+
     </div>
 
     <script>
+        let debugMode = false;
+
         const RED = 0.2126;
         const GREEN = 0.7152;
         const BLUE = 0.0722;
@@ -250,57 +289,65 @@
         const cornerRadius = 30;
 
         const bottom = Bodies.rectangle(250, 650, jarWidth, jarBottomThickness, { 
+            elem: document.getElementById("jar-bottom"),
             isStatic: true,
-            render: {
-                fillStyle: '#D3D3D3',
-                strokeStyle: '#A9A9A9',
-                lineWidth: 1
-            }
+            scaleFactor: 1,
         });
 
-        const leftWall = Bodies.rectangle(50, 400, wallThickness, jarHeight, { 
+        const leftWall = Bodies.rectangle(50, 400, wallThickness, jarHeight, {
+            elem: document.getElementById("jar-leftWall"),
+            scaleFactor: 1,
             isStatic: true,
-            render: {
-                fillStyle: '#D3D3D3',
-                strokeStyle: '#A9A9A9',
-                lineWidth: 1
-            }
         });
 
-        const rightWall = Bodies.rectangle(450, 400, wallThickness, jarHeight, { 
+        const rightWall = Bodies.rectangle(450, 400, wallThickness, jarHeight, {
+            elem: document.getElementById("jar-rightWall"),
+            scaleFactor: 1,
             isStatic: true,
-            render: {
-                fillStyle: '#D3D3D3',
-                strokeStyle: '#A9A9A9',
-                lineWidth: 1
-            }
         });
 
         World.add(engine.world, [bottom, leftWall, rightWall]);
 
-        Runner.run(engine);
-        Render.run(render);
+        let counter = 0;
+
+        (function rerender() {
+            Engine.update(engine);
+            if (debugMode && counter++ % 60 == 0) {
+                for (let body of engine.world.bodies) {
+                    console.log(body);
+                }
+            }
+            for (let body of engine.world.bodies) {
+                let elem = body.elem;
+                if (!elem) {
+                    continue;
+                }
+                elem.style.top = (body.position.y)  + "px";
+                elem.style.left = (body.position.x) + "px";
+                elem.style.rotate = `${body.angle}turn`;
+                elem.style.scale = body.scaleFactor;
+            }
+
+            requestAnimationFrame(rerender);
+        })();
 
         let score = 0;
         let currentGumball = null;
         let correctButton = null;
         let currentContrast = null;
-        let debugMode = false;
 
         function createGumball(x, y, bgColor, fgColor, radius = 20) {
+            let gumballElem = document.createElement("div");
+            gumballElem.classList.add("gumball");
+            gumballElem.style.backgroundColor = `rgb(${bgColor.join(',')})`;
+            gumballElem.style.color = `rgb(${fgColor.join(',')})`;
+            gumballElem.textContent = "Test text";
+            document.getElementById("sandbox").appendChild(gumballElem);
             const gumball = Bodies.circle(x, y, radius, {
+                elem: gumballElem,
                 restitution: 0.5,
                 friction: 0.005,
-                render: {
-                    fillStyle: `rgb(${bgColor.join(',')})`,
-                    text: {
-                        content: `Test Text`,
-                        color: `rgb(${fgColor.join(',')})`,
-                        size: 28, // Doubled initial size
-                        family: 'Arial, sans-serif',
-                        scaleFactor: 1
-                    }
-                }
+                scaleFactor: 1.0
             });
 
             return gumball;
@@ -347,14 +394,13 @@
                         Body.setStatic(currentGumball, false);
                         Body.applyForce(currentGumball, { x: currentGumball.position.x, y: currentGumball.position.y }, { x: (Math.random() - 0.5) * 0.3, y: -.2 });
                         Body.setAngularVelocity(currentGumball, (Math.random() - 0.5) * 0.1); // Apply an angular speed for spinning
-                        currentGumball.render.text.scaleFactor = 0.3; // Adjusted scaling factor
                         currentGumball = null;
                         score++;
                         document.getElementById('score').textContent = `Score: ${score}`;
                         setTimeout(createNewGumball, 1000); // Delay creation of next gumball
                     } else {
                         Body.scale(currentGumball, 1 - scaleStep, 1 - scaleStep);
-                        currentGumball.render.text.scaleFactor -= scaleStep * 0.85; // Scale down the text proportionally
+                        currentGumball.scaleFactor *= 1 - scaleStep;
                     }
                 }, 16); // Approx. 60fps
             }
