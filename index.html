@@ -1,24 +1,230 @@
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AA! AAA!</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/matter-wrap@0.2.0/build/matter-wrap.min.js"></script>
+    <script src="https://unpkg.com/color-name-list/dist/colornames.umd.js"></script>
     <style>
-        #button {
-            /* background-color: red;
-            color: yellow; */
-            border: none;
-            border-radius: 3px;
-            padding: 2em;
-            font-size: larger;
-            width: 100%;
-            border-radius: 100%;
+    @import url('https://fonts.googleapis.com/css2?family=Fascinate+Inline&display=swap');
+    body {
+        margin: 0;
+        padding: 0;
+        display: flex;  
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f0f0f0;
+        font-family: Arial, sans-serif;
+    }
+    #game-container {
+        position: relative;
+        width: 500px;
+        height: 700px;
+    }
+    #score {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 50px;
+        font-family: 'Fascinate Inline', cursive; /* Carnival-style font */
+        color: #FF5733;
+        text-shadow: 2px 2px #000;
+    }
+    #debug-info {
+        display: none;
+        position: absolute;
+        top: 10px;
+        right: -50px;
+        font-size: 18px;
+        font-family: 'Arial', sans-serif;
+        color: #333;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 5px;
+        border-radius: 5px;
+    }
+    #game-over {
+        display: none;
+        position: absolute;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 40px;
+        font-family: 'Fascinate Inline', cursive;
+        color: #FF0000;
+        text-shadow: 2px 2px #000;
+    }
+    #reset-btn {
+        display: none;
+        position: absolute;
+        top: 75%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 24px;
+        font-family: 'Fascinate Inline', cursive;
+        background-color: #333;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    #chosen-option {
+        display: none;
+        position: absolute;
+        top: 60%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 24px;
+        font-family: 'Arial', sans-serif;
+        color: #000;
+        background-color: #fff;
+        padding: 10px;
+        border: 2px solid #000;
+        border-radius: 5px;
+        text-align: center;
+    }
+    @keyframes shimmer {
+        0%, 100% {
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3), 0 0 10px rgba(255, 255, 255, 0.3), 0 0 15px rgba(255, 255, 255, 0.3);
         }
+        50% {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.9), 0 0 30px rgba(255, 255, 255, 0.9), 0 0 40px rgba(255, 255, 255, 0.9);
+        }
+    }
+    #buttons {
+        position: absolute;
+        bottom: -50px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 36px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: transform 0.3s ease, background 0.3s ease;
+        font-family: 'Fascinate Inline', cursive;
+        color: white;
+        text-shadow: 1px 1px #000;
+    }
+    button:active {
+        transform: scale(1.2);
+    }
+    button.shimmer {
+        animation: shimmer 0.6s infinite;
+    }
+    button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+    #fail-btn {
+        background-color: #FF4C4C; /* More vibrant red */
+        box-shadow: 0 0 10px rgba(255, 76, 76, 0.5), 0 0 20px rgba(255, 76, 76, 0.5), 0 0 30px rgba(255, 76, 76, 0.5);
+    }
+    #aa-btn {
+        background-color: #FFD700; /* More vibrant yellow */
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.5), 0 0 30px rgba(255, 215, 0, 0.5);
+    }
+    #aaa-btn {
+        background-color: #32CD32; /* More vibrant green */
+        box-shadow: 0 0 10px rgba(50, 205, 50, 0.5), 0 0 20px rgba(50, 205, 50, 0.5), 0 0 30px rgba(50, 205, 50, 0.5);
+    }
+    #debug-btn {
+        position: absolute;
+        background-color: #333;
+        color: white;
+        padding: 5px;
+        font-size: 16px;
+        top: 0;
+    }
 
-        body>div {
-            margin: auto;
-            width: 128px;
-        }
+    #sandbox {
+        width: 500px;
+        height: 700px;
+    }
+
+    #sandbox > div {
+        translate: -50% -50%;
+        position: absolute;
+    }
+
+
+    #sandbox .jar {
+        background-color: #D3D3D3;
+    }
+
+    #sandbox .jar.side {
+        border-bottom-left-radius: 40px;
+        border-bottom: solid #D3D3D3 20px;
+        border-bottom-right-radius: 40px;
+    }
+
+    #sandbox .gumball {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #sandbox .gumball > div {
+        text-align: center;
+        width: 75%;
+        padding: 0.5em 0;
+    }
+
+    #sandbox .gumball > div:first-child {
+        border-bottom: solid 1px;
+    }
+
+    #sandbox .gumball.current {
+        background: conic-gradient(#000 calc(var(--time-left)*1%),#0000 0);
+    }
+
+    #sandbox .gumball:after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        inset: 10px;
+        background-color: var(--gumball-bg);
+        z-index: -1;
+    }
     </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="score">Score: 0</div>
+        <div id="sandbox">
+            <div class="jar" id="jar-bottom" style="left: 250px; top: 650px; height: 20px; width: 400px;"></div>
+            <div class="jar side" id="jar-leftWall" style="left: 50px; top: 400px; height: 500px; width: 20px;"></div>
+            <div class="jar side" id="jar-rightWall" style="left: 450px; top: 400px; height: 500px; width: 20px;"></div>
+        </div>
+        <div id="game-over">Game over!</div>
+        <div id="chosen-option"></div>
+        <button id="reset-btn">Reset Game</button>
+        <div id="debug-info">Contrast Ratio: N/A</div>
+        <button id="debug-btn">Debug Mode</button>
+        <div id="buttons">
+            <button id="fail-btn">Fail</button>
+            <button id="aa-btn">AA</button>
+            <button id="aaa-btn">AAA</button>
+        </div>
+
+    </div>
+
     <script>
+        let debugMode = false;
+        let cheatMode = location.hash == "#cheat";
+        const ballOverlap = 10;
+
         const RED = 0.2126;
         const GREEN = 0.7152;
         const BLUE = 0.0722;
@@ -43,17 +249,24 @@
             return (brightest + 0.05) / (darkest + 0.05);
         }
 
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result.slice(1, 4).map(r => parseInt(r, 16));
+        }
+
         function randomColor() {
-            return [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)]
+            let color = colorNameList[Math.floor(Math.random() * colorNameList.length)];
+            console.log(color.name);
+            return { name: color.name, rgb: hexToRgb(color.hex) };
         }
 
         function generateColorPair(req = (c) => true) {
             while (true) {
                 const bg = randomColor();
                 const fg = randomColor();
-                const contrast = calcContrast(bg, fg);
+                const contrast = calcContrast(bg.rgb, fg.rgb);
                 if (req(contrast)) {
-                    return [bg, fg];
+                    return [bg, fg, contrast];
                 }
             }
         }
@@ -70,62 +283,275 @@
             return generateColorPair((contrast) => contrast < 4.5);
         }
 
-        function adjustColor(button) {
-            const [bg, fg] = (() => {
-                switch (Math.floor(Math.random() * 3)) {
-                    case 0:
-                        return generateAAA();
-                    case 1:
-                        return generateAA();
-                    case 2:
-                        return generateFail();
+        const { Engine, Render, World, Bodies, Body, Composite, Events, Runner } = Matter;
+
+        const engine = Engine.create();
+        const render = Render.create({
+            element: document.getElementById('game-container'),
+            engine: engine,
+            options: {
+                width: 500, // Increased width
+                height: 700, // Increased height
+                wireframes: false,
+                background: '#f0f0f0'
+            }
+        });
+
+        // Create jar-like structure with flat bottom and curved corners
+        const wallThickness = 20;
+        const jarWidth = 400;
+        const jarHeight = 500;
+        const jarBottomThickness = 20;
+        const cornerRadius = 30;
+
+        const bottom = Bodies.rectangle(250, 650, jarWidth, jarBottomThickness + ballOverlap, { 
+            elem: document.getElementById("jar-bottom"),
+            isStatic: true,
+            scaleFactor: 1,
+        });
+
+        const leftWall = Bodies.rectangle(50, 400, wallThickness + ballOverlap, jarHeight, {
+            elem: document.getElementById("jar-leftWall"),
+            scaleFactor: 1,
+            isStatic: true,
+        });
+
+        const rightWall = Bodies.rectangle(450, 400, wallThickness + ballOverlap, jarHeight, {
+            elem: document.getElementById("jar-rightWall"),
+            scaleFactor: 1,
+            isStatic: true,
+        });
+
+        World.add(engine.world, [bottom, leftWall, rightWall]);
+
+        let counter = 0;
+
+        (function rerender() {
+            Engine.update(engine);
+            if (debugMode && counter++ % 60 == 0) {
+                for (let body of engine.world.bodies) {
+                    console.log(body);
                 }
-            })();
-            const contrast = calcContrast(bg, fg);
-            button.style.backgroundColor = `rgb(${bg.join(',')})`;
-            button.style.color = `rgb(${fg.join(',')})`;
-            button.dataset.contrast = contrast.toFixed(2);
-            if (contrast > 7) {
-                button.dataset.rating = "AAA";
-            } else if (contrast > 4.5) {
-                button.dataset.rating = "AA";
-            } else {
-                button.dataset.rating = "FAIL";
             }
-            for (let radio of document.querySelectorAll("input[type='radio']")) {
-                radio.checked = false;
+            for (let body of engine.world.bodies) {
+                let elem = body.elem;
+                if (!elem) {
+                    continue;
+                }
+                elem.style.top = (body.position.y)  + "px";
+                elem.style.left = (body.position.x) + "px";
+                elem.style.rotate = `${body.angle}turn`;
+                elem.style.scale = body.scaleFactor;
+            }
+
+            requestAnimationFrame(rerender);
+        })();
+
+        let score = 0;
+        let currentGumball = null;
+        let correctButton = null;
+        let currentContrast = null;
+
+        function createGumball(x, y, bgColor, fgColor, radius = 20) {
+            let gumballElem = document.createElement("div");
+            gumballElem.classList.add("gumball");
+            gumballElem.classList.add("current");
+            let fg = document.createElement("div");
+            fg.textContent = fgColor.name;
+            fg.style.color = `rgb(${fgColor.rgb.join(',')})`;
+            gumballElem.appendChild(fg);
+            let bg = document.createElement("div");
+            bg.textContent = bgColor.name;
+            bg.style.color = `rgb(${fgColor.rgb.join(',')})`;
+            gumballElem.appendChild(bg);
+
+            gumballElem.style.setProperty('--gumball-bg', `rgb(${bgColor.rgb.join(',')})`);
+            gumballElem.style.setProperty('--time-left', `100`);
+            document.getElementById("sandbox").appendChild(gumballElem);
+            const gumball = Bodies.circle(x, y, radius - ballOverlap, {
+                elem: gumballElem,
+                restitution: 0.5,
+                friction: 0.005,
+                scaleFactor: 1.0
+            });
+
+            return gumball;
+        }
+
+        function getRandomColorPair() {
+            const randomFunc = [generateAAA, generateAA, generateFail][Math.floor(Math.random() * 3)];
+            const [bgColor, fgColor, contrast] = randomFunc();
+            currentContrast = contrast;
+            switch(randomFunc) {
+                case generateAAA:
+                    correctButton = 'aaa-btn';
+                    break;
+                case generateAA:
+                    correctButton = 'aa-btn';
+                    break;
+                case generateFail:
+                    correctButton = 'fail-btn';
+                    break;
+            }
+            if (cheatMode) {
+                console.log(correctButton);
+            }
+            return [bgColor, fgColor];
+        }
+
+        function createNewGumball() {
+            const [bgColor, fgColor] = getRandomColorPair();
+            currentGumball = createGumball(250, 150, bgColor, fgColor, 80); // Lowered initial position and doubled size
+            Body.setStatic(currentGumball, true);
+            World.add(engine.world, currentGumball);
+            resetTimer(); // Reset the timer for each new gumball
+            if (debugMode) {
+                document.getElementById('debug-info').textContent = `Contrast Ratio: ${currentContrast.toFixed(2)}`;
             }
         }
 
-        function answerSelected(evt) {
-            let button = document.getElementById("button");
-            if (evt.target.value == button.dataset.rating) {
-                console.log(`Correct!!! The rating for ${button.dataset.contrast} is '${button.dataset.rating}'`);
-            } else {
-                console.log(`Wrong! The rating is '${button.dataset.rating}' (${button.dataset.contrast})`);
+        function dropCurrentGumball() {
+            if (currentGumball) {
+                let scale = 1;
+                const scaleStep = 2 / 15;
+                currentGumball.elem.classList.remove("current");
+                const interval = setInterval(() => {
+                    scale -= scaleStep;
+                    if (scale <= 0.15) {
+                        scale = 0.15;
+                        clearInterval(interval);
+                        Body.setStatic(currentGumball, false);
+                        Body.applyForce(currentGumball, { x: currentGumball.position.x, y: currentGumball.position.y }, { x: (Math.random() - 0.5) * 0.3, y: -.2 });
+                        Body.setAngularVelocity(currentGumball, (Math.random() - 0.5) * 0.1); // Apply an angular speed for spinning
+                        currentGumball = null;
+                        score++;
+                        document.getElementById('score').textContent = `Score: ${score}`;
+                        setTimeout(createNewGumball, 1000); // Delay creation of next gumball
+                    } else {
+                        Body.scale(currentGumball, 1 - scaleStep, 1 - scaleStep);
+                        currentGumball.scaleFactor *= 1 - scaleStep;
+                    }
+                }, 16); // Approx. 60fps
             }
         }
+
+        function renderGumballText(ctx, body) {
+            const { text } = body.render;
+            if (text) {
+                const scaledSize = text.size * text.scaleFactor;
+                ctx.font = `${scaledSize}px ${text.family}`;
+                ctx.fillStyle = text.color;
+                const textWidth = ctx.measureText(text.content).width;
+
+                ctx.save();
+                ctx.translate(body.position.x, body.position.y);
+                ctx.rotate(body.angle);
+                ctx.fillText(text.content, -textWidth / 2, scaledSize / 2);
+                ctx.restore();
+            }
+        }
+
+        function gameOver(userChoice) {
+            document.getElementById('game-over').style.display = 'block';
+            document.getElementById('reset-btn').style.display = 'block';
+            document.getElementById('chosen-option').style.display = 'block';
+            document.getElementById('fail-btn').disabled = true;
+            document.getElementById('aa-btn').disabled = true;
+            document.getElementById('aaa-btn').disabled = true;
+            clearInterval(interval); // Stop the timer
+
+            let contrastDesignation = '';
+            if (currentContrast < 4.5) {
+                contrastDesignation = 'Fail';
+            } else if (currentContrast < 7) {
+                contrastDesignation = 'AA';
+            } else {
+                contrastDesignation = 'AAA';
+            }
+
+            document.getElementById('chosen-option').innerHTML = `You chose: ${userChoice}.<br>Actual contrast: ${currentContrast.toFixed(2)} (${contrastDesignation})`;
+        }
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            location.reload();
+        });
+
+        Events.on(render, 'afterRender', () => {
+            const ctx = render.context;
+            Composite.allBodies(engine.world).forEach(body => {
+                renderGumballText(ctx, body);
+            });
+        });
+
+        document.getElementById('fail-btn').addEventListener('click', () => {
+            if (correctButton === 'fail-btn') {
+                dropCurrentGumball();
+                resetTimer(); // Reset the timer for the next gumball
+            } else {
+                gameOver('Fail');
+            }
+        });
+
+        document.getElementById('aa-btn').addEventListener('click', () => {
+            if (correctButton === 'aa-btn') {
+                dropCurrentGumball();
+                resetTimer(); // Reset the timer for the next gumball
+            } else {
+                gameOver('AA');
+            }
+        });
+
+        document.getElementById('aaa-btn').addEventListener('click', () => {
+            if (correctButton === 'aaa-btn') {
+                dropCurrentGumball();
+                resetTimer(); // Reset the timer for the next gumball
+            } else {
+                gameOver('AAA');
+            }
+        });
+
+        document.getElementById('debug-btn').addEventListener('click', () => {
+            debugMode = !debugMode;
+            document.getElementById('debug-info').style.display = debugMode ? 'block' : 'none';
+            if (debugMode) {
+                document.getElementById('debug-info').textContent = `Contrast Ratio: ${currentContrast.toFixed(2)}`;
+            }
+        });
+
+        let interval;
+        let gumballCount = 0;
+
+        function startTimer(duration) {
+            clearInterval(interval);
+            let timeLeft = duration;
+            interval = setInterval(() => {
+                timeLeft -= 16;
+                if (currentGumball) {
+                    currentGumball.elem.style.setProperty('--time-left', (timeLeft/duration) * 100);
+                }
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    gameOver('Time Up');
+                }
+            }, 16);
+        }
+
+        function resetTimer() {
+            let newDuration;
+            gumballCount++;
+            if (gumballCount <= 5) {
+                newDuration = 10000;
+            } else if (gumballCount <= 8) {
+                newDuration = 7500;
+            } else if (gumballCount <= 11) {
+                newDuration = 5000;
+            } else {
+                newDuration = 3000;
+            }
+            startTimer(newDuration);
+        }
+
+        createNewGumball();
     </script>
-</head>
-
-<body>
-    <div>
-        <button id="button">Hello world</button>
-        <p>
-            <input type="radio" name="contrast" id="fail" value="FAIL" /><label for="fail">FAIL</label><br>
-            <input type="radio" name="contrast" id="aa" value="AA" /><label for="aa">AA</label><br>
-            <input type="radio" name="contrast" id="aaa" value="AAA" /><label for="aaa">AAA</label>
-        </p>
-        <!-- <div><span id="contrast"></span> <span id="rating"></span></div> -->
-        <script>
-            document.getElementById("button").addEventListener("click", evt => adjustColor(evt.target));
-            for (let radio of document.querySelectorAll("input[type='radio']")) {
-                console.log(radio);
-                radio.addEventListener("change", answerSelected);
-            }
-            adjustColor(document.getElementById("button"));
-        </script>
-    </div>
 </body>
-
 </html>
