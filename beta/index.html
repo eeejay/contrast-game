@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AA! AAA!</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/matter-wrap@0.2.0/build/matter-wrap.min.js"></script>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fascinate+Inline&display=swap');
+    body {
+        margin: 0;
+        padding: 0;
+        display: flex;  
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f0f0f0;
+        font-family: Arial, sans-serif;
+    }
+    #game-container {
+        position: relative;
+        width: 500px;
+        height: 700px;
+    }
+    #score {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 50px;
+        font-family: 'Fascinate Inline', cursive; /* Carnival-style font */
+        color: #FF5733;
+        text-shadow: 2px 2px #000;
+    }
+    #debug-info {
+        display: none;
+        position: absolute;
+        top: 10px;
+        right: -50px;
+        font-size: 18px;
+        font-family: 'Arial', sans-serif;
+        color: #333;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 5px;
+        border-radius: 5px;
+    }
+    #game-over {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 40px;
+        font-family: 'Fascinate Inline', cursive;
+        color: #FF0000;
+        text-shadow: 2px 2px #000;
+    }
+    #reset-btn {
+        display: none;
+        position: absolute;
+        top: 60%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 24px;
+        font-family: 'Fascinate Inline', cursive;
+        background-color: #333;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    @keyframes shimmer {
+        0%, 100% {
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3), 0 0 10px rgba(255, 255, 255, 0.3), 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+        50% {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.9), 0 0 30px rgba(255, 255, 255, 0.9), 0 0 40px rgba(255, 255, 255, 0.9);
+        }
+    }
+    #buttons {
+        position: absolute;
+        bottom: -50px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 36px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: transform 0.3s ease, background 0.3s ease;
+        font-family: 'Fascinate Inline', cursive;
+        color: white;
+        text-shadow: 1px 1px #000;
+    }
+    button:active {
+        transform: scale(1.2);
+    }
+    button.shimmer {
+        animation: shimmer 0.6s infinite;
+    }
+    button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+    #fail-btn {
+        background-color: #FF4C4C; /* More vibrant red */
+        box-shadow: 0 0 10px rgba(255, 76, 76, 0.5), 0 0 20px rgba(255, 76, 76, 0.5), 0 0 30px rgba(255, 76, 76, 0.5);
+    }
+    #aa-btn {
+        background-color: #FFD700; /* More vibrant yellow */
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.5), 0 0 30px rgba(255, 215, 0, 0.5);
+    }
+    #aaa-btn {
+        background-color: #32CD32; /* More vibrant green */
+        box-shadow: 0 0 10px rgba(50, 205, 50, 0.5), 0 0 20px rgba(50, 205, 50, 0.5), 0 0 30px rgba(50, 205, 50, 0.5);
+    }
+    #debug-btn {
+        position: absolute;
+        background-color: #333;
+        color: white;
+        padding: 5px;
+        font-size: 16px;
+    }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="score">Score: 0</div>
+        <div id="game-over">Game over!</div>
+        <button id="reset-btn">Reset Game</button>
+        <div id="debug-info">Contrast Ratio: N/A</div>
+        <button id="debug-btn">Debug Mode</button>
+        <div id="buttons">
+            <button id="fail-btn">Fail</button>
+            <button id="aa-btn">AA</button>
+            <button id="aaa-btn">AAA</button>
+        </div>
+    </div>
+
+    <script>
+        const RED = 0.2126;
+        const GREEN = 0.7152;
+        const BLUE = 0.0722;
+
+        const GAMMA = 2.4;
+
+        function luminance(r, g, b) {
+            let a = [r, g, b].map((v) => {
+                v /= 255;
+                return v <= 0.03928
+                    ? v / 12.92
+                    : Math.pow((v + 0.055) / 1.055, GAMMA);
+            });
+            return a[0] * RED + a[1] * GREEN + a[2] * BLUE;
+        }
+
+        function calcContrast(rgb1, rgb2) {
+            let lum1 = luminance(...rgb1);
+            let lum2 = luminance(...rgb2);
+            let brightest = Math.max(lum1, lum2);
+            let darkest = Math.min(lum1, lum2);
+            return (brightest + 0.05) / (darkest + 0.05);
+        }
+
+        function randomColor() {
+            return [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)]
+        }
+
+        function generateColorPair(req = (c) => true) {
+            while (true) {
+                const bg = randomColor();
+                const fg = randomColor();
+                const contrast = calcContrast(bg, fg);
+                if (req(contrast)) {
+                    return [bg, fg, contrast];
+                }
+            }
+        }
+
+        function generateAAA() {
+            return generateColorPair((contrast) => contrast >= 7);
+        }
+
+        function generateAA() {
+            return generateColorPair((contrast) => contrast < 7 && contrast >= 4.5);
+        }
+
+        function generateFail() {
+            return generateColorPair((contrast) => contrast < 4.5);
+        }
+
+        const { Engine, Render, World, Bodies, Body, Composite, Events, Runner } = Matter;
+
+        const engine = Engine.create();
+        const render = Render.create({
+            element: document.getElementById('game-container'),
+            engine: engine,
+            options: {
+                width: 500, // Increased width
+                height: 700, // Increased height
+                wireframes: false,
+                background: '#f0f0f0'
+            }
+        });
+
+        // Create jar-like structure with flat bottom and curved corners
+        const wallThickness = 20;
+        const jarWidth = 400;
+        const jarHeight = 500;
+        const jarBottomThickness = 20;
+        const cornerRadius = 30;
+
+        const bottom = Bodies.rectangle(250, 650, jarWidth, jarBottomThickness, { 
+            isStatic: true,
+            render: {
+                fillStyle: '#D3D3D3',
+                strokeStyle: '#A9A9A9',
+                lineWidth: 1
+            }
+        });
+
+        const leftWall = Bodies.rectangle(50, 400, wallThickness, jarHeight, { 
+            isStatic: true,
+            render: {
+                fillStyle: '#D3D3D3',
+                strokeStyle: '#A9A9A9',
+                lineWidth: 1
+            }
+        });
+
+        const rightWall = Bodies.rectangle(450, 400, wallThickness, jarHeight, { 
+            isStatic: true,
+            render: {
+                fillStyle: '#D3D3D3',
+                strokeStyle: '#A9A9A9',
+                lineWidth: 1
+            }
+        });
+
+        World.add(engine.world, [bottom, leftWall, rightWall]);
+
+        Runner.run(engine);
+        Render.run(render);
+
+        let score = 0;
+        let currentGumball = null;
+        let correctButton = null;
+        let currentContrast = null;
+        let debugMode = false;
+
+        function createGumball(x, y, bgColor, fgColor, radius = 20) {
+            const gumball = Bodies.circle(x, y, radius, {
+                restitution: 0.5,
+                friction: 0.005,
+                render: {
+                    fillStyle: `rgb(${bgColor.join(',')})`,
+                    text: {
+                        content: `Test Text`,
+                        color: `rgb(${fgColor.join(',')})`,
+                        size: 28, // Doubled initial size
+                        family: 'Arial, sans-serif',
+                        scaleFactor: 1
+                    }
+                }
+            });
+
+            return gumball;
+        }
+
+        function getRandomColorPair() {
+            const randomFunc = [generateAAA, generateAA, generateFail][Math.floor(Math.random() * 3)];
+            const [bgColor, fgColor, contrast] = randomFunc();
+            currentContrast = contrast;
+            switch(randomFunc) {
+                case generateAAA:
+                    correctButton = 'aaa-btn';
+                    break;
+                case generateAA:
+                    correctButton = 'aa-btn';
+                    break;
+                case generateFail:
+                    correctButton = 'fail-btn';
+                    break;
+            }
+            return [bgColor, fgColor];
+        }
+
+        function createNewGumball() {
+            const [bgColor, fgColor] = getRandomColorPair();
+            currentGumball = createGumball(250, 150, bgColor, fgColor, 80); // Lowered initial position and doubled size
+            Body.setStatic(currentGumball, true);
+            World.add(engine.world, currentGumball);
+            if (debugMode) {
+                document.getElementById('debug-info').textContent = `Contrast Ratio: ${currentContrast.toFixed(2)}`;
+            }
+        }
+
+        function dropCurrentGumball() {
+            if (currentGumball) {
+                let scale = 1;
+                const scaleStep = 2 / 15;
+                const interval = setInterval(() => {
+                    scale -= scaleStep;
+                    if (scale <= 0.15) {
+                        scale = 0.15;
+                        clearInterval(interval);
+                        Body.setStatic(currentGumball, false);
+                        Body.applyForce(currentGumball, { x: currentGumball.position.x, y: currentGumball.position.y }, { x: (Math.random() - 0.5) * 0.3, y: -.2 });
+                        Body.setAngularVelocity(currentGumball, (Math.random() - 0.5) * 0.1); // Apply an angular speed for spinning
+                        currentGumball.render.text.scaleFactor = 0.3; // Adjusted scaling factor
+                        currentGumball = null;
+                        score++;
+                        document.getElementById('score').textContent = `Score: ${score}`;
+                        setTimeout(createNewGumball, 1000); // Delay creation of next gumball
+                    } else {
+                        Body.scale(currentGumball, 1 - scaleStep, 1 - scaleStep);
+                        currentGumball.render.text.scaleFactor -= scaleStep * 0.85; // Scale down the text proportionally
+                    }
+                }, 16); // Approx. 60fps
+            }
+        }
+
+        function renderGumballText(ctx, body) {
+            const { text } = body.render;
+            if (text) {
+                const scaledSize = text.size * text.scaleFactor;
+                ctx.font = `${scaledSize}px ${text.family}`;
+                ctx.fillStyle = text.color;
+                const textWidth = ctx.measureText(text.content).width;
+
+                ctx.save();
+                ctx.translate(body.position.x, body.position.y);
+                ctx.rotate(body.angle);
+                ctx.fillText(text.content, -textWidth / 2, scaledSize / 2);
+                ctx.restore();
+            }
+        }
+
+        function gameOver() {
+            document.getElementById('game-over').style.display = 'block';
+            document.getElementById('reset-btn').style.display = 'block';
+            document.getElementById('fail-btn').disabled = true;
+            document.getElementById('aa-btn').disabled = true;
+            document.getElementById('aaa-btn').disabled = true;
+        }
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            location.reload();
+        });
+
+        Events.on(render, 'afterRender', () => {
+            const ctx = render.context;
+            Composite.allBodies(engine.world).forEach(body => {
+                renderGumballText(ctx, body);
+            });
+        });
+
+        document.getElementById('fail-btn').addEventListener('click', () => {
+            if (correctButton === 'fail-btn') {
+                dropCurrentGumball();
+                const btn = document.getElementById('fail-btn');
+                btn.classList.add('shimmer');
+                setTimeout(() => btn.classList.remove('shimmer'), 600);
+            } else {
+                gameOver();
+            }
+        });
+
+        document.getElementById('aa-btn').addEventListener('click', () => {
+            if (correctButton === 'aa-btn') {
+                dropCurrentGumball();
+                const btn = document.getElementById('aa-btn');
+                btn.classList.add('shimmer');
+                setTimeout(() => btn.classList.remove('shimmer'), 600);
+            } else {
+                gameOver();
+            }
+        });
+
+        document.getElementById('aaa-btn').addEventListener('click', () => {
+            if (correctButton === 'aaa-btn') {
+                dropCurrentGumball();
+                const btn = document.getElementById('aaa-btn');
+                btn.classList.add('shimmer');
+                setTimeout(() => btn.classList.remove('shimmer'), 600);
+            } else {
+                gameOver();
+            }
+        });
+
+        document.getElementById('debug-btn').addEventListener('click', () => {
+            debugMode = !debugMode;
+            document.getElementById('debug-info').style.display = debugMode ? 'block' : 'none';
+            if (debugMode) {
+                document.getElementById('debug-info').textContent = `Contrast Ratio: ${currentContrast.toFixed(2)}`;
+            }
+        });
+
+        createNewGumball();
+    </script>
+</body>
+</html>
