@@ -6,6 +6,7 @@
     <title>AA! AAA!</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/matter-wrap@0.2.0/build/matter-wrap.min.js"></script>
+    <script src="https://unpkg.com/color-name-list/dist/colornames.umd.js"></script>
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Fascinate+Inline&display=swap');
     body {
@@ -169,8 +170,19 @@
         height: 180px;
         border-radius: 50%;
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
+    }
+
+    #sandbox .gumball > div {
+        text-align: center;
+        width: 75%;
+        padding: 0.5em 0;
+    }
+
+    #sandbox .gumball > div:first-child {
+        border-bottom: solid 1px;
     }
 
     #sandbox .gumball.current {
@@ -237,15 +249,22 @@
             return (brightest + 0.05) / (darkest + 0.05);
         }
 
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result.slice(1, 4).map(r => parseInt(r, 16));
+        }
+
         function randomColor() {
-            return [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)];
+            let color = colorNameList[Math.floor(Math.random() * colorNameList.length)];
+            console.log(color.name);
+            return { name: color.name, rgb: hexToRgb(color.hex) };
         }
 
         function generateColorPair(req = (c) => true) {
             while (true) {
                 const bg = randomColor();
                 const fg = randomColor();
-                const contrast = calcContrast(bg, fg);
+                const contrast = calcContrast(bg.rgb, fg.rgb);
                 if (req(contrast)) {
                     return [bg, fg, contrast];
                 }
@@ -337,10 +356,17 @@
             let gumballElem = document.createElement("div");
             gumballElem.classList.add("gumball");
             gumballElem.classList.add("current");
-            gumballElem.style.setProperty('--gumball-bg', `rgb(${bgColor.join(',')})`);
+            let fg = document.createElement("div");
+            fg.textContent = fgColor.name;
+            fg.style.color = `rgb(${fgColor.rgb.join(',')})`;
+            gumballElem.appendChild(fg);
+            let bg = document.createElement("div");
+            bg.textContent = bgColor.name;
+            bg.style.color = `rgb(${fgColor.rgb.join(',')})`;
+            gumballElem.appendChild(bg);
+
+            gumballElem.style.setProperty('--gumball-bg', `rgb(${bgColor.rgb.join(',')})`);
             gumballElem.style.setProperty('--time-left', `100`);
-            gumballElem.style.color = `rgb(${fgColor.join(',')})`;
-            gumballElem.textContent = "Test text";
             document.getElementById("sandbox").appendChild(gumballElem);
             const gumball = Bodies.circle(x, y, radius - ballOverlap, {
                 elem: gumballElem,
