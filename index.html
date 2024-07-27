@@ -568,7 +568,7 @@
         })
 
         document.getElementById('fail-btn').addEventListener('click', () => {
-            if (correctButton === 'fail-btn') {
+            if (correctButton === 'fail-btn' || cheatMode) {
                 dropCurrentGumball();
                 resetTimer(); // Reset the timer for the next gumball
             } else {
@@ -577,7 +577,7 @@
         });
 
         document.getElementById('aa-btn').addEventListener('click', () => {
-            if (correctButton === 'aa-btn') {
+            if (correctButton === 'aa-btn' || cheatMode) {
                 dropCurrentGumball();
                 resetTimer(); // Reset the timer for the next gumball
             } else {
@@ -586,7 +586,7 @@
         });
 
         document.getElementById('aaa-btn').addEventListener('click', () => {
-            if (correctButton === 'aaa-btn') {
+            if (correctButton === 'aaa-btn' || cheatMode) {
                 dropCurrentGumball();
                 resetTimer(); // Reset the timer for the next gumball
             } else {
