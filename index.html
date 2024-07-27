@@ -169,15 +169,6 @@
             box-shadow: 0 0 10px rgba(50, 205, 50, 0.5), 0 0 20px rgba(50, 205, 50, 0.5), 0 0 30px rgba(50, 205, 50, 0.5);
         }
 
-        #debug-btn {
-            position: absolute;
-            background-color: #333;
-            color: white;
-            padding: 5px;
-            font-size: 16px;
-            top: 0;
-        }
-
         #sandbox {
             width: 500px;
             height: 700px;
@@ -272,7 +263,6 @@
         <div id="chosen-option"></div>
         <button id="reset-btn">Reset Game</button>
         <div id="debug-info">Contrast Ratio: N/A</div>
-        <button id="debug-btn">Debug Mode</button>
         <div id="buttons">
             <button id="fail-btn">Fail</button>
             <button id="aa-btn">AA</button>
@@ -282,8 +272,8 @@
     </div>
 
     <script>
-        let debugMode = false;
-        let cheatMode = location.hash == "#cheat";
+        let debugMode = location.hash.includes("debug");
+        let cheatMode = location.hash.includes("cheat");
         const ballOverlap = 10;
 
         const RED = 0.2126;
@@ -591,14 +581,6 @@
                 resetTimer(); // Reset the timer for the next gumball
             } else {
                 gameOver('AAA');
-            }
-        });
-
-        document.getElementById('debug-btn').addEventListener('click', () => {
-            debugMode = !debugMode;
-            document.getElementById('debug-info').style.display = debugMode ? 'block' : 'none';
-            if (debugMode) {
-                document.getElementById('debug-info').textContent = `Contrast Ratio: ${currentContrast.toFixed(2)}`;
             }
         });
 
