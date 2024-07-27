@@ -10,6 +10,7 @@
     <script src="https://unpkg.com/color-name-list/dist/colornames.umd.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Bangers&display=swap');
+
         :root {
             --fail-color: #FF4C4C;
             --aa-color: #FFD700;
@@ -99,7 +100,9 @@
             text-align: center;
         }
 
-        .over #game-over, .over #reset-btn, .over #chosen-option {
+        .over #game-over,
+        .over #reset-btn,
+        .over #chosen-option {
             display: block;
         }
 
@@ -266,6 +269,9 @@
 
 
     <script>
+        let buzzerWrong = new Audio("buzzer-wrong.wav");
+        let dingCorrect = new Audio("ding-correct.wav");
+
         let debugMode = location.hash.includes("debug");
         let cheatMode = location.hash.includes("cheat");
         const ballOverlap = 10;
@@ -473,6 +479,8 @@
         }
 
         function dropCurrentGumball() {
+            dingCorrect.currentTime = 0;
+            dingCorrect.play();
             slapStamp();
             if (currentGumball) {
                 let scale = 1;
@@ -516,6 +524,7 @@
 
         function gameOver(userChoice) {
             document.body.classList.add("over");
+            buzzerWrong.play();
             slapStamp();
             document.getElementById('fail-btn').disabled = true;
             document.getElementById('aa-btn').disabled = true;
