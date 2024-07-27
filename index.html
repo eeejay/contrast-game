@@ -20,8 +20,8 @@
             margin: 0;
             padding: 0;
             display: flex;
-            justify-content: center;
             align-items: center;
+            flex-direction: column;
             height: 100vh;
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
@@ -30,18 +30,16 @@
         #game-container {
             position: relative;
             width: 500px;
-            height: 700px;
+            height: 675px;
         }
 
         #score {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
             font-size: 50px;
             font-family: 'Bangers', cursive;
             /* Carnival-style font */
             color: #FF5733;
             text-shadow: 2px 2px #000;
+            text-align: center;
         }
 
         #debug-info {
@@ -118,10 +116,6 @@
         }
 
         #buttons {
-            position: absolute;
-            bottom: -50px;
-            left: 50%;
-            transform: translateX(-50%);
             display: flex;
             gap: 10px;
         }
@@ -251,8 +245,8 @@
 </head>
 
 <body>
+    <div id="score">Score: 0</div>
     <div id="game-container">
-        <div id="score">Score: 0</div>
         <div id="sandbox">
             <div class="jar" id="jar-bottom" style="left: 250px; top: 650px; height: 20px; width: 400px;"></div>
             <div class="jar side" id="jar-leftWall" style="left: 50px; top: 400px; height: 500px; width: 20px;"></div>
@@ -263,13 +257,13 @@
         <div id="chosen-option"></div>
         <button id="reset-btn">Reset Game</button>
         <div id="debug-info">Contrast Ratio: N/A</div>
-        <div id="buttons">
-            <button id="fail-btn">Fail</button>
-            <button id="aa-btn">AA</button>
-            <button id="aaa-btn">AAA</button>
-        </div>
-
     </div>
+    <div id="buttons">
+        <button id="fail-btn">Fail</button>
+        <button id="aa-btn">AA</button>
+        <button id="aaa-btn">AAA</button>
+    </div>
+
 
     <script>
         let debugMode = location.hash.includes("debug");
@@ -337,7 +331,7 @@
 
         const engine = Engine.create();
         const render = Render.create({
-            element: document.getElementById('game-container'),
+            // element: document.getElementById('game-container'),
             engine: engine,
             options: {
                 width: 500, // Increased width
