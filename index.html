@@ -10,6 +10,11 @@
     <script src="https://unpkg.com/color-name-list/dist/colornames.umd.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Bangers&display=swap');
+        :root {
+            --fail-color: #FF4C4C;
+            --aa-color: #FFD700;
+            --aaa-color: #32CD32;
+        }
 
         body {
             margin: 0;
@@ -96,6 +101,10 @@
             text-align: center;
         }
 
+        .over #game-over, .over #rest-btn, .over #chosen-option {
+            display: block;
+        }
+
         @keyframes shimmer {
 
             0%,
@@ -143,19 +152,19 @@
         }
 
         #fail-btn {
-            background-color: #FF4C4C;
+            background-color: var(--fail-color);
             /* More vibrant red */
             box-shadow: 0 0 10px rgba(255, 76, 76, 0.5), 0 0 20px rgba(255, 76, 76, 0.5), 0 0 30px rgba(255, 76, 76, 0.5);
         }
 
         #aa-btn {
-            background-color: #FFD700;
+            background-color: var(--aa-color);
             /* More vibrant yellow */
             box-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.5), 0 0 30px rgba(255, 215, 0, 0.5);
         }
 
         #aaa-btn {
-            background-color: #32CD32;
+            background-color: var(--aaa-color);
             /* More vibrant green */
             box-shadow: 0 0 10px rgba(50, 205, 50, 0.5), 0 0 20px rgba(50, 205, 50, 0.5), 0 0 30px rgba(50, 205, 50, 0.5);
         }
@@ -222,6 +231,31 @@
             background-color: var(--gumball-bg);
             z-index: -1;
         }
+
+        #contrast-stamp {
+            position: absolute;
+            top: 150px;
+            left: 50%;
+            z-index: 200;
+            font-size: 75px;
+            font-family: 'Bangers', cursive;
+            color: #0ada34;
+            text-shadow: 2px 2px #000;
+            rotate: 330deg;
+            translate: -50% -50%;
+            transition: opacity 1s, visibility 1s;
+        }
+
+        body:not(.over) #contrast-stamp:not(.show) {
+            visibility: hidden;
+            opacity: 0.0;
+        }
+
+        #contrast-stamp.show {
+            visibility: visible;
+            opacity: 1.0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
     </style>
 </head>
 
@@ -233,6 +267,7 @@
             <div class="jar side" id="jar-leftWall" style="left: 50px; top: 400px; height: 500px; width: 20px;"></div>
             <div class="jar side" id="jar-rightWall" style="left: 450px; top: 400px; height: 500px; width: 20px;"></div>
         </div>
+        <div id="contrast-stamp">4.15</div>
         <div id="game-over">Game over!</div>
         <div id="chosen-option"></div>
         <button id="reset-btn">Reset Game</button>
@@ -282,7 +317,6 @@
 
         function randomColor() {
             let color = colorNameList[Math.floor(Math.random() * colorNameList.length)];
-            console.log(color.name);
             return { name: color.name, rgb: hexToRgb(color.hex) };
         }
 
@@ -436,7 +470,26 @@
             }
         }
 
+        function slapStamp() {
+            const contrastStamp = document.getElementById("contrast-stamp");
+            contrastStamp.style.rotate = `${Math.random() * 0.2 - 0.1}turn`;
+            contrastStamp.textContent = currentContrast.toFixed(2);
+            switch (correctButton) {
+                case 'aaa-btn':
+                    contrastStamp.style.color = "var(--aaa-color)";
+                    break;
+                case 'aa-btn':
+                    contrastStamp.style.color = "var(--aa-color)";
+                    break;
+                case 'fail-btn':
+                    contrastStamp.style.color = "var(--fail-color)";
+                    break;
+            }
+            contrastStamp.classList.add("show");
+        }
+
         function dropCurrentGumball() {
+            slapStamp();
             if (currentGumball) {
                 let scale = 1;
                 const scaleStep = 2 / 15;
@@ -478,9 +531,8 @@
         }
 
         function gameOver(userChoice) {
-            document.getElementById('game-over').style.display = 'block';
-            document.getElementById('reset-btn').style.display = 'block';
-            document.getElementById('chosen-option').style.display = 'block';
+            document.body.classList.add("over");
+            slapStamp();
             document.getElementById('fail-btn').disabled = true;
             document.getElementById('aa-btn').disabled = true;
             document.getElementById('aaa-btn').disabled = true;
@@ -508,6 +560,12 @@
                 renderGumballText(ctx, body);
             });
         });
+
+        document.getElementById('contrast-stamp').addEventListener('transitionend', evt => {
+            if (evt.target.classList.contains("show")) {
+                evt.target.classList.remove("show")
+            }
+        })
 
         document.getElementById('fail-btn').addEventListener('click', () => {
             if (correctButton === 'fail-btn') {
