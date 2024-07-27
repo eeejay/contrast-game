@@ -624,10 +624,12 @@
             let newDuration;
             gumballCount++;
             if (gumballCount <= 5) {
+                newDuration = 15000;
+            } else if (gumballCount <= 10) {
                 newDuration = 10000;
-            } else if (gumballCount <= 8) {
+            } else if (gumballCount <= 20) {
                 newDuration = 7500;
-            } else if (gumballCount <= 11) {
+            } else if (gumballCount <= 30) {
                 newDuration = 5000;
             } else {
                 newDuration = 3000;
