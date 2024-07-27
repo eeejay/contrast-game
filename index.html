@@ -262,15 +262,20 @@
         <div id="debug-info">Contrast Ratio: N/A</div>
     </div>
     <div id="buttons">
-        <button id="fail-btn">Fail</button>
-        <button id="aa-btn">AA</button>
-        <button id="aaa-btn">AAA</button>
+        <!-- TODO: make physical buttons do ALT + <accesskey> -->
+        <button accesskey="a" id="fail-btn">Fail</button>
+        <button accesskey="s" id="aa-btn">AA</button>
+        <button accesskey="d" id="aaa-btn">AAA</button>
     </div>
 
-
     <script>
+        // Load the sounds and attempt to preload them so that they're ready
+        // to go immediately. Sometimes Firefox lags a bit on playback but we
+        // want it to ding or buzz right away.
         let buzzerWrong = new Audio("buzzer-wrong.wav");
         let dingCorrect = new Audio("ding-correct.wav");
+        buzzerWrong.load();
+        dingCorrect.load();
 
         let debugMode = location.hash.includes("debug");
         let cheatMode = location.hash.includes("cheat");
