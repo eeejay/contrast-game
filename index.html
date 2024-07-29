@@ -342,8 +342,8 @@
         // Load the sounds and attempt to preload them so that they're ready
         // to go immediately. Sometimes Firefox lags a bit on playback but we
         // want it to ding or buzz right away.
-        let buzzerWrong = new Audio("buzzer-wrong.wav");
-        let dingCorrect = new Audio("ding-correct.wav");
+        let buzzerWrong = new Audio("audio/buzzer-wrong.wav");
+        let dingCorrect = new Audio("audio/ding-correct.wav");
         buzzerWrong.load();
         dingCorrect.load();
 
