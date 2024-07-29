@@ -265,17 +265,9 @@
 
         #aaa-stamp::before {
             background: url("images/aaa.svg");
-        }
-
-        #aaa-stamp>span {
-            display: block;
-            margin-top: 88px;
-            width: 100%;
-            text-align: center;
-            font-weight: bold;
-            font-size: 36px;
-            font-family: 'Droid Sans';
-            color: var(--aaa-color);
+            mask: url('#aaa-contrast-mask'), linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            mask-repeat: no-repeat;
         }
 
         #fail-stamp::before {
@@ -321,8 +313,7 @@
         </div>
         <div id="fail-stamp" class="stamp"><span id="fail-contrast"></span></div>
         <div id="aa-stamp" class="stamp"></div>
-        <div id="aaa-stamp" class="stamp"><span id="aaa-contrast"></span></div>
-        <div id="fail-stamp" class="stamp"><span id="aaa-contrast"></span></div>
+        <div id="aaa-stamp" class="stamp"></span></div>
         <div id="game-over">Game over!</div>
         <div id="chosen-option"></div>
         <button id="reset-btn">Restart</button>
@@ -606,6 +597,11 @@
         xmlns="http://www.w3.org/2000/svg">
         <mask id="aa-contrast-mask">
             <text id="aa-contrast"
+                style="text-anchor: middle; font-style:normal;font-weight:bold;font-size:56px;font-family:'Droid Sans';fill:#ffffff"
+                x="110" y="132">cccc</text>
+        </mask>
+        <mask id="aaa-contrast-mask">
+            <text id="aaa-contrast"
                 style="text-anchor: middle; font-style:normal;font-weight:bold;font-size:56px;font-family:'Droid Sans';fill:#ffffff"
                 x="110" y="132">cccc</text>
         </mask>
