@@ -387,12 +387,15 @@
     </div>
     <div id="buttons">
         <!-- TODO: make physical buttons do ALT + <accesskey> -->
-        <button accesskey="a" id="fail-btn">Fail</button>
-        <button accesskey="s" id="aa-btn">AA</button>
-        <button accesskey="d" id="aaa-btn">AAA</button>
+        <button accesskey="a" id="fail-btn" data-rating="FAIL">Fail</button>
+        <button accesskey="s" id="aa-btn" data-rating="AA">AA</button>
+        <button accesskey="d" id="aaa-btn" data-rating="AAA">AAA</button>
     </div>
 
-    <script>
+    <script type="module">
+        import { QuizGenerator } from "./js/contrast-quiz.mjs";
+        const quizGenerator = QuizGenerator();
+
         // Load the sounds and attempt to preload them so that they're ready
         // to go immediately. Sometimes Firefox lags a bit on playback but we
         // want it to ding or buzz right away.
@@ -405,62 +408,6 @@
         let cheatMode = location.hash.includes("cheat");
         const ballOverlap = 10;
 
-        const RED = 0.2126;
-        const GREEN = 0.7152;
-        const BLUE = 0.0722;
-
-        const GAMMA = 2.4;
-
-        function luminance(r, g, b) {
-            let a = [r, g, b].map((v) => {
-                v /= 255;
-                return v <= 0.03928
-                    ? v / 12.92
-                    : Math.pow((v + 0.055) / 1.055, GAMMA);
-            });
-            return a[0] * RED + a[1] * GREEN + a[2] * BLUE;
-        }
-
-        function calcContrast(rgb1, rgb2) {
-            let lum1 = luminance(...rgb1);
-            let lum2 = luminance(...rgb2);
-            let brightest = Math.max(lum1, lum2);
-            let darkest = Math.min(lum1, lum2);
-            return (brightest + 0.05) / (darkest + 0.05);
-        }
-
-        function hexToRgb(hex) {
-            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result.slice(1, 4).map(r => parseInt(r, 16));
-        }
-
-        function randomColor() {
-            let color = colorNameList[Math.floor(Math.random() * colorNameList.length)];
-            return { name: color.name, rgb: hexToRgb(color.hex) };
-        }
-
-        function generateColorPair(req = (c) => true) {
-            while (true) {
-                const bg = randomColor();
-                const fg = randomColor();
-                const contrast = calcContrast(bg.rgb, fg.rgb);
-                if (req(contrast)) {
-                    return [bg, fg, contrast];
-                }
-            }
-        }
-
-        function generateAAA() {
-            return generateColorPair((contrast) => contrast >= 7);
-        }
-
-        function generateAA() {
-            return generateColorPair((contrast) => contrast < 7 && contrast >= 4.5);
-        }
-
-        function generateFail() {
-            return generateColorPair((contrast) => contrast < 4.5);
-        }
 
         const { Engine, Render, World, Bodies, Body, Composite, Events, Runner } = Matter;
 
@@ -544,24 +491,25 @@
         let correctButton = null;
         let currentContrast = null;
 
-        function createGumball(x, y, bgColor, fgColor, radius = 20) {
-            let gumballElem = document.createElement("div");
-            gumballElem.classList.add("gumball");
-            gumballElem.classList.add("current");
+        function createGumball(x, y, quizCard, radius = 20) {
+            let elem = document.createElement("div");
+            elem.classList.add("gumball");
+            elem.classList.add("current");
             let fg = document.createElement("div");
-            fg.textContent = fgColor.name;
-            fg.style.color = `rgb(${fgColor.rgb.join(',')})`;
-            gumballElem.appendChild(fg);
+            fg.textContent = quizCard.fgColorName;
+            fg.style.color = quizCard.cssFgColor;
+            elem.appendChild(fg);
             let bg = document.createElement("div");
-            bg.textContent = bgColor.name;
-            bg.style.color = `rgb(${fgColor.rgb.join(',')})`;
-            gumballElem.appendChild(bg);
+            bg.textContent = quizCard.bgColorName;
+            bg.style.color = quizCard.cssFgColor;;
+            elem.appendChild(bg);
 
-            gumballElem.style.setProperty('--gumball-bg', `rgb(${bgColor.rgb.join(',')})`);
-            gumballElem.style.setProperty('--time-left', `100`);
-            document.getElementById("sandbox").appendChild(gumballElem);
+            elem.style.setProperty('--gumball-bg', quizCard.cssBgColor);
+            elem.style.setProperty('--time-left', `100`);
+            document.getElementById("sandbox").appendChild(elem);
             const gumball = Bodies.circle(x, y, radius - ballOverlap, {
-                elem: gumballElem,
+                quizCard,
+                elem,
                 restitution: 0.5,
                 friction: 0.005,
                 scaleFactor: 1.0
@@ -570,30 +518,9 @@
             return gumball;
         }
 
-        function getRandomColorPair() {
-            const randomFunc = [generateAAA, generateAA, generateFail][Math.floor(Math.random() * 3)];
-            const [bgColor, fgColor, contrast] = randomFunc();
-            currentContrast = contrast;
-            switch (randomFunc) {
-                case generateAAA:
-                    correctButton = 'aaa-btn';
-                    break;
-                case generateAA:
-                    correctButton = 'aa-btn';
-                    break;
-                case generateFail:
-                    correctButton = 'fail-btn';
-                    break;
-            }
-            if (cheatMode) {
-                console.log(correctButton);
-            }
-            return [bgColor, fgColor];
-        }
-
         function createNewGumball() {
-            const [bgColor, fgColor] = getRandomColorPair();
-            currentGumball = createGumball(250, 50, bgColor, fgColor, 80); // Lowered initial position and doubled size
+            const quizCard = quizGenerator.next().value;
+            currentGumball = createGumball(250, 50, quizCard, 80); // Lowered initial position and doubled size
             Body.setStatic(currentGumball, true);
             World.add(engine.world, currentGumball);
             resetTimer(); // Reset the timer for each new gumball
@@ -604,18 +531,18 @@
 
         function slapStamp() {
             let contrastStamp = null;
-            switch (correctButton) {
-                case 'aaa-btn':
+            switch (currentGumball.quizCard.contrastRating) {
+                case 'AAA':
                     contrastStamp = document.getElementById("aaa-stamp");
-                    document.getElementById("aaa-contrast").textContent = currentContrast.toFixed(2);
+                    document.getElementById("aaa-contrast").textContent = currentGumball.quizCard.contrast.toFixed(2);
                     break;
-                case 'aa-btn':
+                case 'AA':
                     contrastStamp = document.getElementById("aa-stamp");
-                    document.getElementById("aa-contrast").textContent = currentContrast.toFixed(2);
+                    document.getElementById("aa-contrast").textContent = currentGumball.quizCard.contrast.toFixed(2);
                     break;
-                case 'fail-btn':
+                case 'FAIL':
                     contrastStamp = document.getElementById("fail-stamp");
-                    document.getElementById("fail-contrast").textContent = currentContrast.toFixed(2);
+                    document.getElementById("fail-contrast").textContent = currentGumball.quizCard.contrast.toFixed(2);
                     // contrastStamp.style.color = "var(--fail-color)";
                     break;
             }
@@ -676,16 +603,10 @@
             document.getElementById('aaa-btn').disabled = true;
             clearInterval(interval); // Stop the timer
 
-            let contrastDesignation = '';
-            if (currentContrast < 4.5) {
-                contrastDesignation = 'Fail';
-            } else if (currentContrast < 7) {
-                contrastDesignation = 'AA';
-            } else {
-                contrastDesignation = 'AAA';
-            }
+            let contrastDesignation = currentGumball.quizCard.contrastRating;
+            let actualContrast = currentGumball.quizCard.contrast.toFixed(2);
 
-            document.getElementById('chosen-option').innerHTML = `You chose: ${userChoice}.<br>Actual contrast: ${currentContrast.toFixed(2)} (${contrastDesignation})`;
+            document.getElementById('chosen-option').innerHTML = `You chose: ${userChoice}.<br>Actual contrast: ${actualContrast} (${contrastDesignation})`;
         }
 
         document.getElementById('reset-btn').addEventListener('click', () => {
@@ -706,30 +627,14 @@
             }
         });
 
-        document.getElementById('fail-btn').addEventListener('click', () => {
-            if (correctButton === 'fail-btn' || cheatMode) {
-                dropCurrentGumball();
-                resetTimer(); // Reset the timer for the next gumball
-            } else {
-                gameOver('Fail');
-            }
-        });
-
-        document.getElementById('aa-btn').addEventListener('click', () => {
-            if (correctButton === 'aa-btn' || cheatMode) {
-                dropCurrentGumball();
-                resetTimer(); // Reset the timer for the next gumball
-            } else {
-                gameOver('AA');
-            }
-        });
-
-        document.getElementById('aaa-btn').addEventListener('click', () => {
-            if (correctButton === 'aaa-btn' || cheatMode) {
-                dropCurrentGumball();
-                resetTimer(); // Reset the timer for the next gumball
-            } else {
-                gameOver('AAA');
+        document.getElementById('buttons').addEventListener('click', evt => {
+            if (evt.target instanceof HTMLButtonElement) {
+                if (evt.target.dataset.rating == currentGumball.quizCard.contrastRating || cheatMode) {
+                    dropCurrentGumball();
+                    resetTimer();
+                } else {
+                    gameOver(evt.target.dataset.rating);
+                }
             }
         });
 
@@ -752,20 +657,7 @@
         }
 
         function resetTimer() {
-            let newDuration;
-            gumballCount++;
-            if (gumballCount <= 5) {
-                newDuration = 15000;
-            } else if (gumballCount <= 10) {
-                newDuration = 10000;
-            } else if (gumballCount <= 20) {
-                newDuration = 7500;
-            } else if (gumballCount <= 30) {
-                newDuration = 5000;
-            } else {
-                newDuration = 3000;
-            }
-            startTimer(newDuration);
+            startTimer(currentGumball.quizCard.timerDuration);
         }
 
         createNewGumball();
