@@ -230,10 +230,13 @@
             left: 50%;
             z-index: 301;
             translate: -50% -50%;
-            transition: opacity 1s, visibility 1s;
+            transition: opacity 1s, visibility 1s, scale 0s 1s;
             filter: drop-shadow(0 0 5px black);
             width: 220px;
             height: 220px;
+            visibility: hidden;
+            opacity: 0.0;
+            scale: 2;
         }
 
         .stamp::before {
@@ -245,15 +248,11 @@
             bottom: 0;
         }
 
-        .stamp:not(.show) {
-            visibility: hidden;
-            opacity: 0.0;
-        }
-
         .stamp.show {
             visibility: visible;
             opacity: 1.0;
-            transition: opacity 0.3s, visibility 0.3s;
+            scale: 1.0;
+            transition: opacity 0.3s, visibility 0.3s, scale 0.1s;
         }
 
         #aa-stamp::before {
@@ -554,13 +553,15 @@
 
         window.addEventListener('transitionend', evt => {
             if (!document.body.classList.contains("over") &&
-                evt.target.classList.contains("stamp") && evt.target.classList.contains("show")) {
+                evt.target.classList.contains("stamp") &&
+                evt.target.classList.contains("show") &&
+                evt.propertyName != "scale") {
                 evt.target.classList.remove("show")
             }
         });
 
         document.getElementById('buttons').addEventListener('click', evt => {
-            if (evt.target instanceof HTMLButtonElement) {
+            if (evt.target instanceof HTMLButtonElement && currentGumball) {
                 if (evt.target.dataset.rating == currentGumball.quizCard.contrastRating || cheatMode) {
                     dropCurrentGumball();
                     resetTimer();

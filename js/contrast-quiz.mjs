@@ -36,7 +36,6 @@ function randomColor() {
 
 class QuizCard {
   constructor(bgColor, fgColor, timeToSolve = 15) {
-    console.log("QuizCard", bgColor, fgColor);
     this.bgColor = bgColor;
     this.fgColor = fgColor;
     this.timeToSolve = 15;
