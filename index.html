@@ -275,7 +275,7 @@
             font-weight: bold;
             font-size: 36px;
             font-family: 'Droid Sans';
-            color: #32cd32;
+            color: var(--aaa-color);
         }
 
         #fail-stamp::before {
@@ -290,7 +290,7 @@
             font-weight: bold;
             font-size: 48px;
             font-family: 'Droid Sans';
-            color: #FF4C4C;
+            color: var(--fail-color);
         }
 
         .gumball-jar {
@@ -431,8 +431,6 @@
 
         let score = 0;
         let currentGumball = null;
-        let correctButton = null;
-        let currentContrast = null;
 
         function createGumball(x, y, quizCard, radius = 20) {
             let elem = document.createElement("div");
@@ -468,7 +466,7 @@
             World.add(engine.world, currentGumball);
             resetTimer(); // Reset the timer for each new gumball
             if (debugMode) {
-                document.getElementById('debug-info').textContent = `Contrast Ratio: ${currentContrast.toFixed(2)}`;
+                document.getElementById('debug-info').textContent = `Contrast Ratio: ${currentGumball.quizCard.contrast.toFixed(2)}`;
             }
         }
 
@@ -582,7 +580,6 @@
         });
 
         let interval;
-        let gumballCount = 0;
 
         function startTimer(duration) {
             clearInterval(interval);
