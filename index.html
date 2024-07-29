@@ -221,30 +221,74 @@
             z-index: -1;
         }
 
-        #contrast-stamp {
+        .stamp {
             position: absolute;
             top: 150px;
             left: 50%;
             z-index: 200;
-            font-size: 75px;
-            font-family: 'Bangers', cursive;
-            color: #0ada34;
-            text-shadow: 2px 2px #000;
-            rotate: 330deg;
             translate: -50% -50%;
             transition: opacity 1s, visibility 1s;
+            filter:drop-shadow(0 0 5px black);
+            width: 220px;
+            height: 220px;
         }
 
-        body:not(.over) #contrast-stamp:not(.show) {
+        .stamp::before {
+            content:"";
+            position:absolute;
+            top:0;
+            left:0;
+            right:0;
+            bottom:0;
+        }
+
+        .stamp:not(.show) {
             visibility: hidden;
             opacity: 0.0;
         }
 
-        #contrast-stamp.show {
+        .stamp.show {
             visibility: visible;
             opacity: 1.0;
             transition: opacity 0.3s, visibility 0.3s;
         }
+
+        #aa-stamp::before {
+            background: url("aa.svg");
+            mask: url('#aa-contrast-mask'), linear-gradient(#fff 0 0);
+            mask-composite:exclude;
+            mask-repeat:no-repeat;
+        }
+
+        #aaa-stamp::before {
+            background: url("aaa.svg");
+        }
+
+        #aaa-stamp > span {
+        display: block;
+        margin-top: 88px;
+        width: 100%;
+        text-align: center;
+        font-weight: bold;
+        font-size: 36px;
+        font-family: 'Droid Sans';
+        color: #32cd32;
+      }
+
+      #fail-stamp::before {
+        background: url("fail.svg");
+      }
+
+      #fail-stamp > span {
+        display: block;
+        margin-top: 75px;
+        width: 100%;
+        text-align: center;
+        font-weight: bold;
+        font-size: 48px;
+        font-family: 'Droid Sans';
+        color: #FF4C4C;
+      }
     </style>
 </head>
 
@@ -256,7 +300,10 @@
             <div class="jar side" id="jar-leftWall" style="left: 50px; top: 400px; height: 500px; width: 20px;"></div>
             <div class="jar side" id="jar-rightWall" style="left: 450px; top: 400px; height: 500px; width: 20px;"></div>
         </div>
-        <div id="contrast-stamp"></div>
+        <div id="fail-stamp" class="stamp"><span id="fail-contrast"></span></div>
+        <div id="aa-stamp" class="stamp"></div>
+        <div id="aaa-stamp" class="stamp"><span id="aaa-contrast"></span></div>
+        <div id="fail-stamp" class="stamp"><span id="aaa-contrast"></span></div>
         <div id="game-over">Game over!</div>
         <div id="chosen-option"></div>
         <button id="reset-btn">Restart</button>
@@ -467,20 +514,23 @@
         }
 
         function slapStamp() {
-            const contrastStamp = document.getElementById("contrast-stamp");
-            contrastStamp.style.rotate = `${Math.random() * 0.2 - 0.1}turn`;
-            contrastStamp.textContent = currentContrast.toFixed(2);
+            let contrastStamp = null;
             switch (correctButton) {
                 case 'aaa-btn':
-                    contrastStamp.style.color = "var(--aaa-color)";
+                    contrastStamp = document.getElementById("aaa-stamp");
+                    document.getElementById("aaa-contrast").textContent = currentContrast.toFixed(2);
                     break;
                 case 'aa-btn':
-                    contrastStamp.style.color = "var(--aa-color)";
+                    contrastStamp = document.getElementById("aa-stamp");
+                    document.getElementById("aa-contrast").textContent = currentContrast.toFixed(2);
                     break;
                 case 'fail-btn':
-                    contrastStamp.style.color = "var(--fail-color)";
+                    contrastStamp = document.getElementById("fail-stamp");
+                    document.getElementById("fail-contrast").textContent = currentContrast.toFixed(2);
+                    // contrastStamp.style.color = "var(--fail-color)";
                     break;
             }
+            contrastStamp.style.rotate = `${Math.random() * 0.2 - 0.1}turn`;
             contrastStamp.classList.add("show");
         }
 
@@ -560,11 +610,13 @@
             });
         });
 
-        document.getElementById('contrast-stamp').addEventListener('transitionend', evt => {
-            if (evt.target.classList.contains("show")) {
+
+        window.addEventListener('transitionend', evt => {
+            if (!document.body.classList.contains("over") &&
+                evt.target.classList.contains("stamp") && evt.target.classList.contains("show")) {
                 evt.target.classList.remove("show")
             }
-        })
+        });
 
         document.getElementById('fail-btn').addEventListener('click', () => {
             if (correctButton === 'fail-btn' || cheatMode) {
@@ -630,6 +682,13 @@
 
         createNewGumball();
     </script>
+  <svg style="display: block" aria-hidden="true" width="0" height="0" viewBox="0 0 0 0" xmlns="http://www.w3.org/2000/svg">
+    <mask id="aa-contrast-mask">
+      <text id="aa-contrast"
+          style="text-anchor: middle; font-style:normal;font-weight:bold;font-size:56px;font-family:'Droid Sans';fill:#ffffff" x="110"
+          y="132">cccc</text>
+    </mask>
+  </svg>
 </body>
 
 </html>
