@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AA! AAA!</title>
+    <link rel="icon" type="image/x-icon" href="contrast-icon.svg">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/matter-wrap@0.2.0/build/matter-wrap.min.js"></script>
+    <script src="https://unpkg.com/color-name-list/dist/colornames.umd.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bangers&display=swap');
+
+        :root {
+            --fail-color: #FF4C4C;
+            --aa-color: #FFD700;
+            --aaa-color: #32CD32;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        #game-container {
+            position: relative;
+            width: 500px;
+            height: 675px;
+        }
+
+        #score {
+            font-size: 50px;
+            font-family: 'Bangers', cursive;
+            /* Carnival-style font */
+            color: #FF5733;
+            text-shadow: 2px 2px #000;
+            text-align: center;
+            align-self: flex-start;
+        }
+
+        #debug-info {
+            display: none;
+            position: absolute;
+            top: 10px;
+            right: -50px;
+            font-size: 18px;
+            font-family: 'Arial', sans-serif;
+            color: #333;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        #game-over {
+            display: none;
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            font-family: 'Bangers', cursive;
+            color: #FF0000;
+            text-shadow: 2px 2px #000;
+            z-index: 1000;
+        }
+
+        #reset-btn {
+            display: none;
+            position: absolute;
+            top: 75%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-family: 'Bangers', cursive;
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #chosen-option {
+            display: none;
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-family: 'Arial', sans-serif;
+            color: #000;
+            background-color: #fff;
+            padding: 10px;
+            border: 2px solid #000;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .over #game-over,
+        .over #reset-btn,
+        .over #chosen-option {
+            display: block;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                box-shadow: 0 0 5px rgba(255, 255, 255, 0.3), 0 0 10px rgba(255, 255, 255, 0.3), 0 0 15px rgba(255, 255, 255, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.9), 0 0 30px rgba(255, 255, 255, 0.9), 0 0 40px rgba(255, 255, 255, 0.9);
+            }
+        }
+
+        #buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 36px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.3s ease, background 0.3s ease;
+            font-family: 'Bangers', cursive;
+            color: white;
+            text-shadow: 1px 1px #000;
+        }
+
+        button:active {
+            transform: scale(1.2);
+        }
+
+        button.shimmer {
+            animation: shimmer 0.6s infinite;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #fail-btn {
+            background-color: var(--fail-color);
+            /* More vibrant red */
+            box-shadow: 0 0 10px rgba(255, 76, 76, 0.5), 0 0 20px rgba(255, 76, 76, 0.5), 0 0 30px rgba(255, 76, 76, 0.5);
+        }
+
+        #aa-btn {
+            background-color: var(--aa-color);
+            /* More vibrant yellow */
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.5), 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+
+        #aaa-btn {
+            background-color: var(--aaa-color);
+            /* More vibrant green */
+            box-shadow: 0 0 10px rgba(50, 205, 50, 0.5), 0 0 20px rgba(50, 205, 50, 0.5), 0 0 30px rgba(50, 205, 50, 0.5);
+        }
+
+        #sandbox {
+            width: 500px;
+            height: 675px;
+        }
+
+        #sandbox>div {
+            translate: -50% -50%;
+            position: absolute;
+        }
+
+
+        #sandbox .jar {
+            background-color: #d3d3d300;
+        }
+
+        #sandbox .jar.side {
+            border-bottom-left-radius: 40px;
+            border-bottom: solid #d3d3d300 20px;
+            border-bottom-right-radius: 40px;
+        }
+
+        #sandbox .gumball {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #sandbox .gumball>div {
+            text-align: center;
+            width: 75%;
+            padding: 0.5em 0;
+            z-index: 0;
+        }
+
+        #sandbox .gumball>div:first-child {
+            border-bottom: solid 1px;
+        }
+
+        #sandbox .gumball.current {
+            background: conic-gradient(#000 calc(var(--time-left)*1%), #0000 0);
+        }
+
+        #sandbox .gumball:after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            inset: 10px;
+            background-color: var(--gumball-bg);
+            z-index: -1;
+        }
+
+        #contrast-stamp {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            z-index: 200;
+            font-size: 75px;
+            font-family: 'Bangers', cursive;
+            color: #0ada34;
+            text-shadow: 2px 2px #000;
+            rotate: 330deg;
+            translate: -50% -50%;
+            transition: opacity 1s, visibility 1s;
+        }
+
+        body:not(.over) #contrast-stamp:not(.show) {
+            visibility: hidden;
+            opacity: 0.0;
+        }
+
+        #contrast-stamp.show {
+            visibility: visible;
+            opacity: 1.0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .gumball-jar {
+            scale: 0.78;
+            position: absolute;
+            top: 80px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="score">Score: 0</div>
+    <div id="game-container">
+        <div id="sandbox">
+            <div class="jar" id="jar-bottom" style="left: 250px; top: 650px; height: 20px; width: 400px;"></div>
+            <div class="jar side" id="jar-leftWall" style="left: 50px; top: 400px; height: 500px; width: 20px;"></div>
+            <div class="jar side" id="jar-rightWall" style="left: 450px; top: 400px; height: 500px; width: 20px;"></div>
+            <div class="jar" id="jar-bottomRightCorner"
+                style="left: 430px; top: 620px; width: 20px; height: 75px; rotate: 0.1turn">
+            </div>
+            <div class="jar" id="jar-bottomLeftCorner"
+                style="left: 80px; top: 630px; width: 20px; height: 75px; rotate: -0.14turn">
+            </div>
+            <?xml version="1.0" encoding="utf-8"?>
+            <svg class="gumball-jar" viewBox="-48.804 119.877 701.239 892.535" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    style="z-index: -1; fill: rgba(216, 216, 216, 0); stroke-linejoin: round; stroke-linecap: round; stroke-width: 7px; stroke: rgb(0, 0, 0);"
+                    d="M -30.815 155.753 C -44.038 112.411 651.111 116.459 619.164 161.497 C 587.216 206.534 619.954 201.647 619.954 201.647 C 625.681 204.914 628.577 218.315 619.033 218.548 C 619.365 220.616 601.831 231.209 606.129 235.449 C 599.066 243.916 613.173 253.075 620.877 254.378 C 633.477 257.98 626.652 271.904 622.305 271.035 C 619.374 277.836 607.132 279.862 600.599 283.447 C 597.528 286.7 597.602 315.494 601.267 325.919 C 599.893 329.588 646.416 396.195 647.099 406.488 L 646.113 872.362 C 648.117 871.06 647.709 898.49 642.693 902.284 C 650.429 910.209 587.673 988.086 573.7 986.902 C 573.035 988.61 534.916 1002.757 521.507 1001.859 C 492.376 1009.594 165.736 1006.634 161.791 1003.05 C 132.017 1005.22 8.935 985.479 5.584 975.615 C 4.703 976.261 -14.584 960.572 -14.303 960.366 C -20.293 955.04 -28.801 939.313 -29.501 936.791 C -33.643 930.75 -41.574 911.445 -42.87 901.074 L -42.858 394.803 C -42.292 390.225 -36.343 373.801 -35.034 372.3 C -35.034 372.3 -14.64 344.38 -12.12 340.224 C -9.601 336.069 -5.855 320.26 -5.551 317.025 C -5.349 317.025 -6.345 296.096 -7.919 295.773 L -29.6 270.999 C -32.591 269.403 -30.419 259.394 -28.243 257.758 C -24.028 254.75 -15.172 249.073 -14.083 246.368 C -11.409 242.761 -8.85 230.361 -8.136 227.954 C -7.17 224.07 -5.71 211.085 -8.781 211.258 C -7.827 210.558 -24.177 199.128 -25.294 198.878 C -27.036 197.173 -27.702 186.815 -25.659 184.803 C -23.617 182.791 -13.68 173.03 -13.133 172.378 C -15.362 172.252 -32.512 155.658 -30.815 155.753 Z"
+                    transform="matrix(0.9999999999999999, 0, 0, 0.9999999999999999, -2.2737367544323206e-13, 0)" />
+            </svg>
+            <svg style="z-index: 300;" class="gumball-jar" viewBox="-48.804 119.877 701.239 892.535"
+                xmlns="http://www.w3.org/2000/svg">
+                <path
+                    style="z-index: 0; stroke-width: 7px; stroke-linejoin: round; stroke-linecap: round; fill: rgba(109, 109, 109, 0); stroke: rgb(0, 0, 0);"
+                    d="M -10.162 172.801 C 52.692 206.727 588.808 209.238 615.843 162.157"
+                    transform="matrix(0.9999999999999999, 0, 0, 0.9999999999999999, -2.2737367544323206e-13, 0)" />
+                <path
+                    style="fill: rgba(216, 216, 216, 0); stroke-width: 7px; stroke-linejoin: round; stroke-linecap: round; stroke: rgb(0, 0, 0);"
+                    d="M 4.12 188.461 C 40.328 203.296 268.885 214.699 302.132 211.25"
+                    transform="matrix(0.9999999999999999, 0, 0, 0.9999999999999999, -2.2737367544323206e-13, 0)" />
+                <path
+                    style="fill: rgba(216, 216, 216, 0); stroke-width: 7px; stroke-linejoin: round; stroke-linecap: round; stroke: rgb(0, 0, 0);"
+                    d="M 392.787 208.867 C 414.549 210.825 560.295 200.738 589.99 191.48"
+                    transform="matrix(0.9999999999999999, 0, 0, 0.9999999999999999, -2.2737367544323206e-13, 0)" />
+                <path
+                    style="fill: rgba(216, 216, 216, 0); stroke-width: 7px; stroke-linejoin: round; stroke-linecap: round; stroke: rgb(0, 0, 0);"
+                    d="M 44.637 218.222 C 174.2 244.977 460.001 240.988 519.057 230.555"
+                    transform="matrix(0.9999999999999999, 0, 0, 0.9999999999999999, -2.2737367544323206e-13, 0)" />
+                <path
+                    style="fill: rgba(216, 216, 216, 0); stroke-width: 7px; stroke-linejoin: round; stroke-linecap: round; stroke: rgb(0, 0, 0);"
+                    d="M 2.904 249.772 C 145.914 278.351 345.409 277.83 526.232 262.444"
+                    transform="matrix(0.9999999999999999, 0, 0, 0.9999999999999999, -2.2737367544323206e-13, 0)" />
+                <path
+                    style="fill: rgba(216, 216, 216, 0); stroke-width: 7px; stroke-linejoin: round; stroke-linecap: round; stroke: rgb(0, 0, 0);"
+                    d="M 1.521 291.89 C 145.689 318.345 377.542 320.401 554.89 302.465"
+                    transform="matrix(0.9999999999999999, 0, 0, 0.9999999999999999, -2.2737367544323206e-13, 0)" />
+                <path
+                    style="fill: rgba(216, 216, 216, 0); stroke-width: 7px; stroke-linejoin: round; stroke-linecap: round; stroke: rgb(0, 0, 0);"
+                    d="M 68.183 377.638 C 69.759 378.083 -16.704 333.736 110.035 331.811 C 236.773 329.887 363.275 342.905 540.624 324.969"
+                    transform="matrix(0.9999999999999999, 0, 0, 0.9999999999999999, -2.2737367544323206e-13, 0)" />
+                <path
+                    style="fill: rgba(216, 216, 216, 0); stroke-width: 7px; stroke-linejoin: round; stroke-linecap: round; stroke: rgb(0, 0, 0);"
+                    d="M 1.733 418.186 C 0.783 593.24 -5.246 616.856 -1.466 763.928"
+                    transform="matrix(0.9999999999999999, 0, 0, 0.9999999999999999, -2.2737367544323206e-13, 0)" />
+                <path
+                    style="fill: rgba(216, 216, 216, 0); stroke-width: 7px; stroke-linejoin: round; stroke-linecap: round; stroke: rgb(0, 0, 0);"
+                    d="M 580.085 403.644 C 580.085 404.019 608.16 402.478 613.068 429.204 C 617.977 455.929 612.793 621.351 613.828 770.627"
+                    transform="matrix(0.9999999999999999, 0, 0, 0.9999999999999999, -2.2737367544323206e-13, 0)" />
+                <path
+                    style="fill: rgba(216, 216, 216, 0); stroke-width: 7px; stroke-linejoin: round; stroke-linecap: round; stroke: rgb(0, 0, 0);"
+                    d="M 427.996 975.909 C 566.92 967.844 580.339 957.102 594.904 936.371"
+                    transform="matrix(0.9999999999999999, 0, 0, 0.9999999999999999, -2.2737367544323206e-13, 0)" />
+                <path
+                    style="stroke-width: 7px; stroke-linejoin: round; stroke-linecap: round; fill: rgba(109, 109, 109, 0); stroke: rgb(0, 0, 0);"
+                    d="M 18.019 173.083 C 67.664 200.102 531.909 198.551 583.659 170.489"
+                    transform="matrix(0.9999999999999999, 0, 0, 0.9999999999999999, -2.2737367544323206e-13, 0)" />
+            </svg>
+            <svg style="z-index: -1;" class="gumball-jar" viewBox="-48.804 119.877 701.239 892.535"
+                xmlns="http://www.w3.org/2000/svg">
+                <path
+                    style="fill: rgba(216, 216, 216, 0); stroke-width: 7px; stroke-linecap: round; stroke-linejoin: round; stroke: rgb(0, 0, 0);"
+                    d="M 17.794 171.967 C 12.217 142.426 580.62 145.792 585.152 169.799"
+                    transform="matrix(0.9999999999999999, 0, 0, 0.9999999999999999, -2.2737367544323206e-13, 0)" />
+            </svg>
+        </div>
+        <div id="contrast-stamp"></div>
+        <div id="game-over">Game over!</div>
+        <div id="chosen-option"></div>
+        <button id="reset-btn">Restart</button>
+        <div id="debug-info">Contrast Ratio: N/A</div>
+    </div>
+    <div id="buttons">
+        <!-- TODO: make physical buttons do ALT + <accesskey> -->
+        <button accesskey="a" id="fail-btn">Fail</button>
+        <button accesskey="s" id="aa-btn">AA</button>
+        <button accesskey="d" id="aaa-btn">AAA</button>
+    </div>
+
+    <script>
+        // Load the sounds and attempt to preload them so that they're ready
+        // to go immediately. Sometimes Firefox lags a bit on playback but we
+        // want it to ding or buzz right away.
+        let buzzerWrong = new Audio("buzzer-wrong.wav");
+        let dingCorrect = new Audio("ding-correct.wav");
+        buzzerWrong.load();
+        dingCorrect.load();
+
+        let debugMode = location.hash.includes("debug");
+        let cheatMode = location.hash.includes("cheat");
+        const ballOverlap = 10;
+
+        const RED = 0.2126;
+        const GREEN = 0.7152;
+        const BLUE = 0.0722;
+
+        const GAMMA = 2.4;
+
+        function luminance(r, g, b) {
+            let a = [r, g, b].map((v) => {
+                v /= 255;
+                return v <= 0.03928
+                    ? v / 12.92
+                    : Math.pow((v + 0.055) / 1.055, GAMMA);
+            });
+            return a[0] * RED + a[1] * GREEN + a[2] * BLUE;
+        }
+
+        function calcContrast(rgb1, rgb2) {
+            let lum1 = luminance(...rgb1);
+            let lum2 = luminance(...rgb2);
+            let brightest = Math.max(lum1, lum2);
+            let darkest = Math.min(lum1, lum2);
+            return (brightest + 0.05) / (darkest + 0.05);
+        }
+
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result.slice(1, 4).map(r => parseInt(r, 16));
+        }
+
+        function randomColor() {
+            let color = colorNameList[Math.floor(Math.random() * colorNameList.length)];
+            return { name: color.name, rgb: hexToRgb(color.hex) };
+        }
+
+        function generateColorPair(req = (c) => true) {
+            while (true) {
+                const bg = randomColor();
+                const fg = randomColor();
+                const contrast = calcContrast(bg.rgb, fg.rgb);
+                if (req(contrast)) {
+                    return [bg, fg, contrast];
+                }
+            }
+        }
+
+        function generateAAA() {
+            return generateColorPair((contrast) => contrast >= 7);
+        }
+
+        function generateAA() {
+            return generateColorPair((contrast) => contrast < 7 && contrast >= 4.5);
+        }
+
+        function generateFail() {
+            return generateColorPair((contrast) => contrast < 4.5);
+        }
+
+        const { Engine, Render, World, Bodies, Body, Composite, Events, Runner } = Matter;
+
+        const engine = Engine.create();
+        const render = Render.create({
+            // element: document.getElementById('game-container'),
+            engine: engine,
+            options: {
+                width: 500, // Increased width
+                height: 675, // Increased height
+                wireframes: false,
+                background: '#f0f0f0'
+            }
+        });
+
+        // Create jar-like structure with flat bottom and curved corners
+        const wallThickness = 20;
+        const jarWidth = 400;
+        const jarHeight = 500;
+        const jarBottomThickness = 20;
+        const cornerRadius = 30;
+
+        const bottom = Bodies.rectangle(250, 650, jarWidth, jarBottomThickness + ballOverlap, {
+            elem: document.getElementById("jar-bottom"),
+            isStatic: true,
+            scaleFactor: 1,
+        });
+
+        const leftWall = Bodies.rectangle(50, 400, wallThickness + ballOverlap, jarHeight, {
+            elem: document.getElementById("jar-leftWall"),
+            scaleFactor: 1,
+            isStatic: true,
+        });
+
+        const rightWall = Bodies.rectangle(450, 400, wallThickness + ballOverlap, jarHeight, {
+            elem: document.getElementById("jar-rightWall"),
+            scaleFactor: 1,
+            isStatic: true,
+        });
+
+        const bottomLeftCorner = Bodies.rectangle(75, 649, 20, 75, {
+            elem: document.getElementById("jar-bottomLeftCorner"),
+            scaleFactor: 1,
+            isStatic: true,
+            angle: -0.14,
+        });
+        const bottomRightCorner = Bodies.rectangle(430, 615, 20, 75, {
+            elem: document.getElementById("jar-bottomRightCorner"),
+            scaleFactor: 1,
+            isStatic: true,
+            angle: 0.1,
+        });
+
+        World.add(engine.world, [bottom, leftWall, rightWall, bottomLeftCorner, bottomRightCorner]);
+
+        let counter = 0;
+
+        (function rerender() {
+            Engine.update(engine);
+            if (debugMode && counter++ % 60 == 0) {
+                for (let body of engine.world.bodies) {
+                    console.log(body);
+                }
+            }
+            for (let body of engine.world.bodies) {
+                let elem = body.elem;
+                if (!elem) {
+                    continue;
+                }
+                elem.style.top = (body.position.y) + "px";
+                elem.style.left = (body.position.x) + "px";
+                elem.style.rotate = `${body.angle}turn`;
+                elem.style.scale = body.scaleFactor;
+            }
+
+            requestAnimationFrame(rerender);
+        })();
+
+        let score = 0;
+        let currentGumball = null;
+        let correctButton = null;
+        let currentContrast = null;
+
+        function createGumball(x, y, bgColor, fgColor, radius = 20) {
+            let gumballElem = document.createElement("div");
+            gumballElem.classList.add("gumball");
+            gumballElem.classList.add("current");
+            let fg = document.createElement("div");
+            fg.textContent = fgColor.name;
+            fg.style.color = `rgb(${fgColor.rgb.join(',')})`;
+            gumballElem.appendChild(fg);
+            let bg = document.createElement("div");
+            bg.textContent = bgColor.name;
+            bg.style.color = `rgb(${fgColor.rgb.join(',')})`;
+            gumballElem.appendChild(bg);
+
+            gumballElem.style.setProperty('--gumball-bg', `rgb(${bgColor.rgb.join(',')})`);
+            gumballElem.style.setProperty('--time-left', `100`);
+            document.getElementById("sandbox").appendChild(gumballElem);
+            const gumball = Bodies.circle(x, y, radius - ballOverlap, {
+                elem: gumballElem,
+                restitution: 0.5,
+                friction: 0.005,
+                scaleFactor: 1.0
+            });
+
+            return gumball;
+        }
+
+        function getRandomColorPair() {
+            const randomFunc = [generateAAA, generateAA, generateFail][Math.floor(Math.random() * 3)];
+            const [bgColor, fgColor, contrast] = randomFunc();
+            currentContrast = contrast;
+            switch (randomFunc) {
+                case generateAAA:
+                    correctButton = 'aaa-btn';
+                    break;
+                case generateAA:
+                    correctButton = 'aa-btn';
+                    break;
+                case generateFail:
+                    correctButton = 'fail-btn';
+                    break;
+            }
+            if (cheatMode) {
+                console.log(correctButton);
+            }
+            return [bgColor, fgColor];
+        }
+
+        function createNewGumball() {
+            const [bgColor, fgColor] = getRandomColorPair();
+            currentGumball = createGumball(250, 50, bgColor, fgColor, 80); // Lowered initial position and doubled size
+            Body.setStatic(currentGumball, true);
+            World.add(engine.world, currentGumball);
+            resetTimer(); // Reset the timer for each new gumball
+            if (debugMode) {
+                document.getElementById('debug-info').textContent = `Contrast Ratio: ${currentContrast.toFixed(2)}`;
+            }
+        }
+
+        function slapStamp() {
+            const contrastStamp = document.getElementById("contrast-stamp");
+            contrastStamp.style.rotate = `${Math.random() * 0.2 - 0.1}turn`;
+            contrastStamp.textContent = currentContrast.toFixed(2);
+            switch (correctButton) {
+                case 'aaa-btn':
+                    contrastStamp.style.color = "var(--aaa-color)";
+                    break;
+                case 'aa-btn':
+                    contrastStamp.style.color = "var(--aa-color)";
+                    break;
+                case 'fail-btn':
+                    contrastStamp.style.color = "var(--fail-color)";
+                    break;
+            }
+            contrastStamp.classList.add("show");
+        }
+
+        function dropCurrentGumball() {
+            dingCorrect.currentTime = 0;
+            dingCorrect.play();
+            slapStamp();
+            if (currentGumball) {
+                let scale = 1;
+                const scaleStep = 2 / 15;
+                currentGumball.elem.classList.remove("current");
+                const interval = setInterval(() => {
+                    scale -= scaleStep;
+                    if (scale <= 0.15) {
+                        scale = 0.15;
+                        clearInterval(interval);
+                        Body.setStatic(currentGumball, false);
+                        Body.applyForce(currentGumball, { x: currentGumball.position.x, y: currentGumball.position.y }, { x: (Math.random() - 0.5) * 0.3, y: -.2 });
+                        Body.setAngularVelocity(currentGumball, (Math.random() - 0.5) * 0.1); // Apply an angular speed for spinning
+                        currentGumball = null;
+                        score++;
+                        document.getElementById('score').textContent = `Score: ${score}`;
+                        setTimeout(createNewGumball, 1000); // Delay creation of next gumball
+                    } else {
+                        Body.scale(currentGumball, 1 - scaleStep, 1 - scaleStep);
+                        currentGumball.scaleFactor *= 1 - scaleStep;
+                    }
+                }, 16); // Approx. 60fps
+            }
+        }
+
+        function renderGumballText(ctx, body) {
+            const { text } = body.render;
+            if (text) {
+                const scaledSize = text.size * text.scaleFactor;
+                ctx.font = `${scaledSize}px ${text.family}`;
+                ctx.fillStyle = text.color;
+                const textWidth = ctx.measureText(text.content).width;
+
+                ctx.save();
+                ctx.translate(body.position.x, body.position.y);
+                ctx.rotate(body.angle);
+                ctx.fillText(text.content, -textWidth / 2, scaledSize / 2);
+                ctx.restore();
+            }
+        }
+
+        function gameOver(userChoice) {
+            document.body.classList.add("over");
+            buzzerWrong.play();
+            slapStamp();
+            document.getElementById('fail-btn').disabled = true;
+            document.getElementById('aa-btn').disabled = true;
+            document.getElementById('aaa-btn').disabled = true;
+            clearInterval(interval); // Stop the timer
+
+            let contrastDesignation = '';
+            if (currentContrast < 4.5) {
+                contrastDesignation = 'Fail';
+            } else if (currentContrast < 7) {
+                contrastDesignation = 'AA';
+            } else {
+                contrastDesignation = 'AAA';
+            }
+
+            document.getElementById('chosen-option').innerHTML = `You chose: ${userChoice}.<br>Actual contrast: ${currentContrast.toFixed(2)} (${contrastDesignation})`;
+        }
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            location.reload();
+        });
+
+        Events.on(render, 'afterRender', () => {
+            const ctx = render.context;
+            Composite.allBodies(engine.world).forEach(body => {
+                renderGumballText(ctx, body);
+            });
+        });
+
+        document.getElementById('contrast-stamp').addEventListener('transitionend', evt => {
+            if (evt.target.classList.contains("show")) {
+                evt.target.classList.remove("show")
+            }
+        })
+
+        document.getElementById('fail-btn').addEventListener('click', () => {
+            if (correctButton === 'fail-btn' || cheatMode) {
+                dropCurrentGumball();
+                resetTimer(); // Reset the timer for the next gumball
+            } else {
+                gameOver('Fail');
+            }
+        });
+
+        document.getElementById('aa-btn').addEventListener('click', () => {
+            if (correctButton === 'aa-btn' || cheatMode) {
+                dropCurrentGumball();
+                resetTimer(); // Reset the timer for the next gumball
+            } else {
+                gameOver('AA');
+            }
+        });
+
+        document.getElementById('aaa-btn').addEventListener('click', () => {
+            if (correctButton === 'aaa-btn' || cheatMode) {
+                dropCurrentGumball();
+                resetTimer(); // Reset the timer for the next gumball
+            } else {
+                gameOver('AAA');
+            }
+        });
+
+        let interval;
+        let gumballCount = 0;
+
+        function startTimer(duration) {
+            clearInterval(interval);
+            let timeLeft = duration;
+            interval = setInterval(() => {
+                timeLeft -= 16;
+                if (currentGumball) {
+                    currentGumball.elem.style.setProperty('--time-left', (timeLeft / duration) * 100);
+                }
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    gameOver('Time Up');
+                }
+            }, 16);
+        }
+
+        function resetTimer() {
+            let newDuration;
+            gumballCount++;
+            if (gumballCount <= 5) {
+                newDuration = 15000;
+            } else if (gumballCount <= 10) {
+                newDuration = 10000;
+            } else if (gumballCount <= 20) {
+                newDuration = 7500;
+            } else if (gumballCount <= 30) {
+                newDuration = 5000;
+            } else {
+                newDuration = 3000;
+            }
+            startTimer(newDuration);
+        }
+
+        createNewGumball();
+    </script>
+</body>
+
+</html>
