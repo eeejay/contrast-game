@@ -27,12 +27,14 @@
             height: 100vh;
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
+            justify-content: space-around;
         }
 
         #game-container {
             position: relative;
             width: 500px;
-            height: 675px;
+            max-width: 100vw;
+            /* height: 675px; */
         }
 
         #score {
@@ -171,8 +173,8 @@
         }
 
         #sandbox {
-            width: 500px;
-            height: 675px;
+            width: 100%;
+            overflow: visible;
         }
 
         #sandbox>div {
@@ -181,48 +183,79 @@
         }
 
 
-        #sandbox .jar {
-            background-color: #d3d3d300;
+        #sandbox > .jar {
+            transform-box: fill-box;
+            opacity: 0;
+        }
+
+        /* #sandbox .jar {
+            background-color: green;
         }
 
         #sandbox .jar.side {
             border-bottom-left-radius: 40px;
             border-bottom: solid #d3d3d300 20px;
             border-bottom-right-radius: 40px;
+        } */
+
+        foreignObject {
+            overflow: visible;
         }
 
-        #sandbox .gumball {
-            width: 180px;
-            height: 180px;
+        .gumball {
             border-radius: 50%;
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            transform-origin: center;
+            position: relative;
+            z-index: -3;
+            background-color: var(--gumball-bg);
         }
 
-        #sandbox .gumball>div {
+        .gumball>div {
             text-align: center;
             width: 75%;
             padding: 0.5em 0;
             z-index: 0;
         }
 
-        #sandbox .gumball>div:first-child {
+        .gumball>div:first-child {
             border-bottom: solid 1px;
         }
 
-        #sandbox .gumball.current {
-            background: conic-gradient(#000 calc(var(--time-left)*1%), #0000 0);
-        }
-
-        #sandbox .gumball:after {
+        .current .gumball:before {
             content: "";
             position: absolute;
             border-radius: 50%;
-            inset: 10px;
-            background-color: var(--gumball-bg);
+            width: calc(100% + 15px);
+            height: calc(100% + 15px);
+            background: conic-gradient(#000 calc(var(--time-left)*1%), #0000 0);
+            z-index: -2;
+        }
+
+        .current .gumball:after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
             z-index: -1;
+            width: 100%;
+            height: 100%;
+            background-color: var(--gumball-bg);
+        }
+
+        #stamps {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 1000;
         }
 
         .stamp {
@@ -295,24 +328,28 @@
 
 <body>
     <div id="score">Score: 0</div>
-    <div id="game-container">
-        <div id="sandbox">
-            <div class="jar" id="jar-bottom" style="left: 250px; top: 650px; height: 20px; width: 400px;"></div>
-            <div class="jar side" id="jar-leftWall" style="left: 50px; top: 400px; height: 500px; width: 20px;"></div>
-            <div class="jar side" id="jar-rightWall" style="left: 450px; top: 400px; height: 500px; width: 20px;"></div>
-            <div class="jar" id="jar-bottomRightCorner"
-                style="left: 430px; top: 620px; width: 20px; height: 75px; rotate: 0.1turn">
-            </div>
-            <div class="jar" id="jar-bottomLeftCorner"
-                style="left: 80px; top: 630px; width: 20px; height: 75px; rotate: -0.14turn">
-            </div>
-            <img class="gumball-jar" src="images/jar-outline.svg">
-            <img style="z-index:300" class="gumball-jar" src="images/jar-foreground.svg">
-            <img style="z-index:-1" class="gumball-jar" src="images/jar-background.svg">
-        </div>
+    <div id="stamps">
         <div id="fail-stamp" class="stamp"><span id="fail-contrast"></span></div>
         <div id="aa-stamp" class="stamp"></div>
         <div id="aaa-stamp" class="stamp"></span></div>
+    </div>
+    <div id="game-container">
+        <img class="gumball-jar" src="images/jar-outline.svg">
+        <img style="z-index:300" class="gumball-jar" src="images/jar-foreground.svg">
+        <img style="z-index:-1" class="gumball-jar" src="images/jar-background.svg">
+        <svg id="sandbox" viewBox="0 0 500 675" xmlns="http://www.w3.org/2000/svg">
+
+        </svg>
+        <!-- <div id="sandbox">
+            <div class="jar" id="jar-bottom"></div>
+            <div class="jar side" id="jar-leftWall""></div>
+            <div class="jar side" id="jar-rightWall""></div>
+            <div class="jar" id="jar-bottomRightCorner">
+            </div>
+            <div class="jar" id="jar-bottomLeftCorner">
+            </div>
+            <?xml version="1.0" encoding="utf-8"?>
+        </div> -->
         <div id="game-over">Game over!</div>
         <div id="chosen-option"></div>
         <button id="reset-btn">Restart</button>
@@ -363,37 +400,32 @@
         const jarBottomThickness = 20;
         const cornerRadius = 30;
 
-        const bottom = Bodies.rectangle(250, 650, jarWidth, jarBottomThickness + ballOverlap, {
-            elem: document.getElementById("jar-bottom"),
-            isStatic: true,
-            scaleFactor: 1,
-        });
+        const sandbox = document.getElementById("sandbox");
+        function createBodyRect(id, x, y, width, height, angle=0) {
+            let elem = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            elem.id = id;
+            elem.classList.add('jar');
+            elem.setAttribute("x", x - width / 2);
+            elem.setAttribute("y", y - height / 2);
+            elem.setAttribute("width", width);
+            elem.setAttribute("height", height);
+            elem.classList.add("jar");
+            sandbox.appendChild(elem);
+            return Bodies.rectangle(x, y, width, height, {
+                elem,
+                width,
+                height,
+                isStatic: true,
+                scaleFactor: 1,
+                angle,
+            });
+        }
 
-        const leftWall = Bodies.rectangle(50, 400, wallThickness + ballOverlap, jarHeight, {
-            elem: document.getElementById("jar-leftWall"),
-            scaleFactor: 1,
-            isStatic: true,
-        });
-
-        const rightWall = Bodies.rectangle(450, 400, wallThickness + ballOverlap, jarHeight, {
-            elem: document.getElementById("jar-rightWall"),
-            scaleFactor: 1,
-            isStatic: true,
-        });
-
-        const bottomLeftCorner = Bodies.rectangle(75, 649, 20, 75, {
-            elem: document.getElementById("jar-bottomLeftCorner"),
-            scaleFactor: 1,
-            isStatic: true,
-            angle: -0.14,
-        });
-        const bottomRightCorner = Bodies.rectangle(430, 615, 20, 75, {
-            elem: document.getElementById("jar-bottomRightCorner"),
-            scaleFactor: 1,
-            isStatic: true,
-            angle: 0.1,
-        });
-
+        const bottom = createBodyRect("jar-bottom", 250, 650, jarWidth, jarBottomThickness + ballOverlap);
+        const leftWall = createBodyRect("jar-leftWall", 50, 400, wallThickness + ballOverlap, jarHeight);
+        const rightWall = createBodyRect("jar-rightWall", 450, 400, wallThickness + ballOverlap, jarHeight);
+        const bottomLeftCorner = createBodyRect("jar-bottomLeftCorner", 75, 649, 20, 75, -0.14);
+        const bottomRightCorner = createBodyRect("jar-bottomRightCorner", 430, 615, 20, 75, 0.1);
         World.add(engine.world, [bottom, leftWall, rightWall, bottomLeftCorner, bottomRightCorner]);
 
         let counter = 0;
@@ -410,10 +442,18 @@
                 if (!elem) {
                     continue;
                 }
-                elem.style.top = (body.position.y) + "px";
-                elem.style.left = (body.position.x) + "px";
-                elem.style.rotate = `${body.angle}turn`;
-                elem.style.scale = body.scaleFactor;
+                let bounds = body.bounds;
+                if (elem instanceof SVGRectElement) {
+                    elem.setAttribute("x", bounds.min.x);
+                    elem.setAttribute("y", bounds.min.y);
+                    elem.setAttribute("width", body.width);
+                    elem.setAttribute("height", body.height);
+                    elem.setAttribute("transform", `rotate(${body.angle * 360})`);
+                } else if (elem instanceof SVGForeignObjectElement) {
+                    // Gumballs
+                    elem.setAttribute("transform", `translate(${body.position.x}, ${body.position.y}) rotate(${body.angle * 360}) scale(${body.scaleFactor})`);
+                }
+
             }
 
             requestAnimationFrame(rerender);
@@ -423,20 +463,29 @@
         let currentGumball = null;
 
         function createGumball(x, y, quizCard, radius = 20) {
-            let elem = document.createElement("div");
-            elem.classList.add("gumball");
+            let elem = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+            elem.setAttribute("x", -radius);
+            elem.setAttribute("y", -radius);
+            elem.setAttribute("width", radius * 2);
+            elem.setAttribute("height", radius * 2);
+            elem.style.transform = `translate(${x}, ${y})`;
             elem.classList.add("current");
+
+            let circle = document.createElement("div");
+            circle.classList.add("gumball");
+            circle.style.setProperty('--gumball-bg', quizCard.cssBgColor);
+
+            elem.appendChild(circle);
+
             let fg = document.createElement("div");
             fg.textContent = quizCard.fgColorName;
             fg.style.color = quizCard.cssFgColor;
-            elem.appendChild(fg);
+            circle.appendChild(fg);
             let bg = document.createElement("div");
             bg.textContent = quizCard.bgColorName;
             bg.style.color = quizCard.cssFgColor;;
-            elem.appendChild(bg);
+            circle.appendChild(bg);
 
-            elem.style.setProperty('--gumball-bg', quizCard.cssBgColor);
-            elem.style.setProperty('--time-left', `100`);
             document.getElementById("sandbox").appendChild(elem);
             const gumball = Bodies.circle(x, y, radius - ballOverlap, {
                 quizCard,
@@ -576,10 +625,11 @@
         function startTimer(duration) {
             clearInterval(interval);
             let timeLeft = duration;
+            document.documentElement.style.setProperty('--time-left', 100);
             interval = setInterval(() => {
                 timeLeft -= 16;
                 if (currentGumball) {
-                    currentGumball.elem.style.setProperty('--time-left', (timeLeft / duration) * 100);
+                    document.documentElement.style.setProperty('--time-left', (timeLeft / duration) * 100);
                 }
                 if (timeLeft <= 0) {
                     clearInterval(interval);
