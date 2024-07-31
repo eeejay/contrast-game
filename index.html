@@ -305,16 +305,29 @@
             top: 0;
             width: 100%;
         }
+
+        #screenreader-info {
+            position: fixed;
+            overflow: hidden;
+            top: -101px;
+            right: 0;
+            height: 100px;
+            width: 100px;
+        }
     </style>
 </head>
 
 <body>
-    <div id="score">Score: 0</div>
-    <div id="stamps">
+    <div id="screenreader-info">
+        <div role="marquee" aria-live="assertive" id="current-ball-marquee"></div>
+        <div aria-live="polite" role="timer" id="current-ball-timer">0</div>
+    </div>
+    <div id="score" role="status">Score: 0</div>
+    <div id="stamps" role="presentation">
         <div role="image" id="fail-stamp" class="stamp"></div>
         <div role="image" id="aa-stamp" class="stamp"></div>
         <div role="image" id="aaa-stamp" class="stamp"></span></div>
-        <svg role="presentation" style="display: block" aria-hidden="true" width="0" height="0" viewBox="0 0 0 0"
+        <svg style="display: block" aria-hidden="true" width="0" height="0" viewBox="0 0 0 0"
             xmlns="http://www.w3.org/2000/svg">
             <mask id="aa-contrast-mask">
                 <text id="aa-contrast"
@@ -333,13 +346,11 @@
             </mask>
         </svg>
     </div>
-    <div id="game-container">
+    <div id="game-container" role="presentation">
         <img role="presentation" class="gumball-jar" src="images/jar-outline.svg">
         <img role="presentation" style="z-index:300" class="gumball-jar" src="images/jar-foreground.svg">
         <img role="presentation" style="z-index:-1" class="gumball-jar" src="images/jar-background.svg">
-        <svg role="presentation" id="sandbox" viewBox="0 0 500 675" xmlns="http://www.w3.org/2000/svg">
-
-        </svg>
+        <svg role="list" id="sandbox" viewBox="0 0 500 675" xmlns="http://www.w3.org/2000/svg"></svg>
         <!-- <div id="sandbox">
             <div class="jar" id="jar-bottom"></div>
             <div class="jar side" id="jar-leftWall""></div>
@@ -348,9 +359,9 @@
             </div>
             <div class="jar" id="jar-bottomLeftCorner">
             </div>
-            <?xml version="1.0" encoding="utf-8"?>
+            <?xml version="1.0" encoding="utf-8"?>ƒ
         </div> -->
-        <div id="game-over">Game over!</div>
+        <div role="heading" aria-level="2" id="game-over">Game over!</div>
         <div id="chosen-option"></div>
         <button id="reset-btn">Restart</button>
         <div id="debug-info">Contrast Ratio: N/A</div>
@@ -369,6 +380,8 @@
         const btnFail = document.getElementById('fail-btn');
         const btnAA = document.getElementById('aa-btn');
         const btnAAA = document.getElementById('aaa-btn');
+        const marquee = document.getElementById('current-ball-marquee');
+
 
         // Load the sounds and attempt to preload them so that they're ready
         // to go immediately. Sometimes Firefox lags a bit on playback but we
@@ -466,7 +479,7 @@
 
         let score = 0;
         let currentGumball = null;
-
+        let first = true;
         function createGumball(x, y, quizCard, radius = 20) {
             let elem = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
             elem.setAttribute("x", -radius);
@@ -477,8 +490,15 @@
             elem.classList.add("current");
 
             let circle = document.createElement("div");
-            circle.role = "alert";
-            circle.ariaLabel = `${quizCard.fgColorName} on ${quizCard.bgColorName}`
+            circle.role = "listitem";
+            circle.ariaLabel = `${quizCard.fgColorName} on ${quizCard.bgColorName}`;
+            if (first) {
+                setTimeout(() => {
+                marquee.textContent = circle.ariaLabel;
+            }, 1000);
+            } else {
+                marquee.textContent = circle.ariaLabel;
+            }
             circle.classList.add("gumball");
             circle.style.setProperty('--gumball-bg', quizCard.cssBgColor);
 
@@ -635,11 +655,17 @@
         function startTimer(duration) {
             clearInterval(interval);
             let timeLeft = duration;
+            let timeLeftInSeconds = Math.ceil(timeLeft / 1000);
             document.documentElement.style.setProperty('--time-left', 100);
             interval = setInterval(() => {
                 timeLeft -= 16;
                 if (currentGumball) {
                     document.documentElement.style.setProperty('--time-left', (timeLeft / duration) * 100);
+                    let newTimeInSeconds = Math.ceil(timeLeft / 1000);
+                    if (newTimeInSeconds != timeLeftInSeconds) {
+                        timeLeftInSeconds = newTimeInSeconds;
+                        document.getElementById("current-ball-timer").textContent = `${timeLeftInSeconds} seconds left`;
+                    }
                 }
                 if (timeLeft <= 0) {
                     clearInterval(interval);
