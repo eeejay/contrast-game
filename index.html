@@ -240,11 +240,11 @@
         }
 
         #stamps {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
-            height: 100vh;
-            width: 100vw;
+            height: 100%;
+            width: 100%;
             overflow: hidden;
             pointer-events: none;
             z-index: 1000;
@@ -252,7 +252,7 @@
 
         .stamp {
             position: absolute;
-            top: 30%;
+            top: 16%;
             left: 50%;
             z-index: 301;
             translate: -50% -50%;
@@ -325,29 +325,6 @@
         <div aria-live="polite" role="timer" id="current-ball-timer">0</div>
     </div>
     <div id="score" role="status">Score: 0</div>
-    <div id="stamps" role="presentation">
-        <div role="image" id="fail-stamp" class="stamp"></div>
-        <div role="image" id="aa-stamp" class="stamp"></div>
-        <div role="image" id="aaa-stamp" class="stamp"></span></div>
-        <svg style="display: block" aria-hidden="true" width="0" height="0" viewBox="0 0 0 0"
-            xmlns="http://www.w3.org/2000/svg">
-            <mask id="aa-contrast-mask">
-                <text id="aa-contrast"
-                    style="text-anchor: middle; font-style:normal;font-weight:bold;font-size:56px;font-family:'Droid Sans';fill:#ffffff"
-                    x="110" y="132">cccc</text>
-            </mask>
-            <mask id="aaa-contrast-mask">
-                <text id="aaa-contrast"
-                    style="text-anchor: middle; font-style:normal;font-weight:bold;font-size:56px;font-family:'Droid Sans';fill:#ffffff"
-                    x="110" y="132">cccc</text>
-            </mask>
-            <mask id="fail-contrast-mask">
-                <text id="fail-contrast"
-                    style="text-anchor: middle; font-style:normal;font-weight:bold;font-size:56px;font-family:'Droid Sans';fill:#ffffff"
-                    x="110" y="130">cccc</text>
-            </mask>
-        </svg>
-    </div>
     <div id="game-container" role="presentation">
         <svg role="list" id="sandbox" viewBox="0 0 500 675" xmlns="http://www.w3.org/2000/svg">
             <image role="presentation" x="0" y="0" width="500" height="675" href="images/jar-background.svg" />
@@ -355,16 +332,29 @@
             <image role="presentation" x="0" y="0" width="500" height="675" href="images/jar-outline.svg" />
             <image role="presentation" x="0" y="0" width="500" height="675" href="images/jar-foreground.svg" />
         </svg>
-        <!-- <div id="sandbox">
-            <div class="jar" id="jar-bottom"></div>
-            <div class="jar side" id="jar-leftWall""></div>
-            <div class="jar side" id="jar-rightWall""></div>
-            <div class="jar" id="jar-bottomRightCorner">
-            </div>
-            <div class="jar" id="jar-bottomLeftCorner">
-            </div>
-            <?xml version="1.0" encoding="utf-8"?>ƒ
-        </div> -->
+        <div id="stamps" role="presentation">
+            <div role="image" id="fail-stamp" class="stamp"></div>
+            <div role="image" id="aa-stamp" class="stamp"></div>
+            <div role="image" id="aaa-stamp" class="stamp"></span></div>
+            <svg style="display: block" aria-hidden="true" width="0" height="0" viewBox="0 0 0 0"
+                xmlns="http://www.w3.org/2000/svg">
+                <mask id="aa-contrast-mask">
+                    <text id="aa-contrast"
+                        style="text-anchor: middle; font-style:normal;font-weight:bold;font-size:56px;font-family:'Droid Sans';fill:#ffffff"
+                        x="110" y="132">cccc</text>
+                </mask>
+                <mask id="aaa-contrast-mask">
+                    <text id="aaa-contrast"
+                        style="text-anchor: middle; font-style:normal;font-weight:bold;font-size:56px;font-family:'Droid Sans';fill:#ffffff"
+                        x="110" y="132">cccc</text>
+                </mask>
+                <mask id="fail-contrast-mask">
+                    <text id="fail-contrast"
+                        style="text-anchor: middle; font-style:normal;font-weight:bold;font-size:56px;font-family:'Droid Sans';fill:#ffffff"
+                        x="110" y="130">cccc</text>
+                </mask>
+            </svg>
+        </div>
         <div role="heading" aria-level="2" id="game-over">Game over!</div>
         <div id="chosen-option"></div>
         <button id="reset-btn">Restart</button>
