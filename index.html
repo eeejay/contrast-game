@@ -188,16 +188,6 @@
             opacity: 0;
         }
 
-        /* #sandbox .jar {
-            background-color: green;
-        }
-
-        #sandbox .jar.side {
-            border-bottom-left-radius: 40px;
-            border-bottom: solid #d3d3d300 20px;
-            border-bottom-right-radius: 40px;
-        } */
-
         foreignObject {
             overflow: visible;
         }
@@ -569,22 +559,6 @@
                         currentGumball.scaleFactor *= 1 - scaleStep;
                     }
                 }, 16); // Approx. 60fps
-            }
-        }
-
-        function renderGumballText(ctx, body) {
-            const { text } = body.render;
-            if (text) {
-                const scaledSize = text.size * text.scaleFactor;
-                ctx.font = `${scaledSize}px ${text.family}`;
-                ctx.fillStyle = text.color;
-                const textWidth = ctx.measureText(text.content).width;
-
-                ctx.save();
-                ctx.translate(body.position.x, body.position.y);
-                ctx.rotate(body.angle);
-                ctx.fillText(text.content, -textWidth / 2, scaledSize / 2);
-                ctx.restore();
             }
         }
 
