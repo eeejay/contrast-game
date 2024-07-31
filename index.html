@@ -289,6 +289,13 @@
             transition: opacity 0.3s, visibility 0.3s, scale 0.1s;
         }
 
+        #fail-stamp::before {
+            background: url("images/fail.svg");
+            mask: url('#fail-contrast-mask'), linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            mask-repeat: no-repeat;
+        }
+
         #aa-stamp::before {
             background: url("images/aa.svg");
             mask: url('#aa-contrast-mask'), linear-gradient(#fff 0 0);
@@ -303,21 +310,6 @@
             mask-repeat: no-repeat;
         }
 
-        #fail-stamp::before {
-            background: url("images/fail.svg");
-        }
-
-        #fail-stamp>span {
-            display: block;
-            margin-top: 75px;
-            width: 100%;
-            text-align: center;
-            font-weight: bold;
-            font-size: 48px;
-            font-family: 'Droid Sans';
-            color: var(--fail-color);
-        }
-
         .gumball-jar {
             scale: 0.78;
             position: absolute;
@@ -329,9 +321,27 @@
 <body>
     <div id="score">Score: 0</div>
     <div id="stamps">
-        <div id="fail-stamp" class="stamp"><span id="fail-contrast"></span></div>
+        <div id="fail-stamp" class="stamp"></div>
         <div id="aa-stamp" class="stamp"></div>
         <div id="aaa-stamp" class="stamp"></span></div>
+        <svg style="display: block" aria-hidden="true" width="0" height="0" viewBox="0 0 0 0"
+            xmlns="http://www.w3.org/2000/svg">
+            <mask id="aa-contrast-mask">
+                <text id="aa-contrast"
+                    style="text-anchor: middle; font-style:normal;font-weight:bold;font-size:56px;font-family:'Droid Sans';fill:#ffffff"
+                    x="110" y="132">cccc</text>
+            </mask>
+            <mask id="aaa-contrast-mask">
+                <text id="aaa-contrast"
+                    style="text-anchor: middle; font-style:normal;font-weight:bold;font-size:56px;font-family:'Droid Sans';fill:#ffffff"
+                    x="110" y="132">cccc</text>
+            </mask>
+            <mask id="fail-contrast-mask">
+                <text id="fail-contrast"
+                    style="text-anchor: middle; font-style:normal;font-weight:bold;font-size:56px;font-family:'Droid Sans';fill:#ffffff"
+                    x="110" y="130">cccc</text>
+            </mask>
+        </svg>
     </div>
     <div id="game-container">
         <img class="gumball-jar" src="images/jar-outline.svg">
@@ -662,19 +672,6 @@
 
         createNewGumball();
     </script>
-    <svg style="display: block" aria-hidden="true" width="0" height="0" viewBox="0 0 0 0"
-        xmlns="http://www.w3.org/2000/svg">
-        <mask id="aa-contrast-mask">
-            <text id="aa-contrast"
-                style="text-anchor: middle; font-style:normal;font-weight:bold;font-size:56px;font-family:'Droid Sans';fill:#ffffff"
-                x="110" y="132">cccc</text>
-        </mask>
-        <mask id="aaa-contrast-mask">
-            <text id="aaa-contrast"
-                style="text-anchor: middle; font-style:normal;font-weight:bold;font-size:56px;font-family:'Droid Sans';fill:#ffffff"
-                x="110" y="132">cccc</text>
-        </mask>
-    </svg>
 </body>
 
 </html>
