@@ -43,8 +43,8 @@
             /* Carnival-style font */
             color: #FF5733;
             text-shadow: 2px 2px #000;
-            text-align: center;
             align-self: flex-start;
+            margin-left: 1em;
         }
 
         #debug-info {
@@ -183,7 +183,7 @@
         }
 
 
-        #sandbox > .jar {
+        #sandbox>.jar {
             transform-box: fill-box;
             opacity: 0;
         }
@@ -366,6 +366,10 @@
         import { QuizGenerator } from "./js/contrast-quiz.mjs";
         const quizGenerator = QuizGenerator();
 
+        const btnFail = document.getElementById('fail-btn');
+        const btnAA = document.getElementById('aa-btn');
+        const btnAAA = document.getElementById('aaa-btn');
+
         // Load the sounds and attempt to preload them so that they're ready
         // to go immediately. Sometimes Firefox lags a bit on playback but we
         // want it to ding or buzz right away.
@@ -401,7 +405,7 @@
         const cornerRadius = 30;
 
         const sandbox = document.getElementById("sandbox");
-        function createBodyRect(id, x, y, width, height, angle=0) {
+        function createBodyRect(id, x, y, width, height, angle = 0) {
             let elem = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
             elem.id = id;
             elem.classList.add('jar');
@@ -578,9 +582,9 @@
             document.body.classList.add("over");
             buzzerWrong.play();
             slapStamp();
-            document.getElementById('fail-btn').disabled = true;
-            document.getElementById('aa-btn').disabled = true;
-            document.getElementById('aaa-btn').disabled = true;
+            btnFail.disabled = true;
+            btnAA.disabled = true;
+            btnAAA.disabled = true;
             clearInterval(interval); // Stop the timer
 
             let contrastDesignation = currentGumball.quizCard.contrastRating;
@@ -606,6 +610,20 @@
                 evt.target.classList.contains("show") &&
                 evt.propertyName != "scale") {
                 evt.target.classList.remove("show")
+            }
+        });
+
+        window.addEventListener("keydown", evt => {
+            switch (evt.key) {
+                case "1":
+                    btnFail.click();
+                    break;
+                case "2":
+                    btnAA.click();
+                    break;
+                case "3":
+                    btnAAA.click();
+                    break;
             }
         });
 
