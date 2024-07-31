@@ -311,10 +311,10 @@
 <body>
     <div id="score">Score: 0</div>
     <div id="stamps">
-        <div id="fail-stamp" class="stamp"></div>
-        <div id="aa-stamp" class="stamp"></div>
-        <div id="aaa-stamp" class="stamp"></span></div>
-        <svg style="display: block" aria-hidden="true" width="0" height="0" viewBox="0 0 0 0"
+        <div role="image" id="fail-stamp" class="stamp"></div>
+        <div role="image" id="aa-stamp" class="stamp"></div>
+        <div role="image" id="aaa-stamp" class="stamp"></span></div>
+        <svg role="presentation" style="display: block" aria-hidden="true" width="0" height="0" viewBox="0 0 0 0"
             xmlns="http://www.w3.org/2000/svg">
             <mask id="aa-contrast-mask">
                 <text id="aa-contrast"
@@ -334,10 +334,10 @@
         </svg>
     </div>
     <div id="game-container">
-        <img class="gumball-jar" src="images/jar-outline.svg">
-        <img style="z-index:300" class="gumball-jar" src="images/jar-foreground.svg">
-        <img style="z-index:-1" class="gumball-jar" src="images/jar-background.svg">
-        <svg id="sandbox" viewBox="0 0 500 675" xmlns="http://www.w3.org/2000/svg">
+        <img role="presentation" class="gumball-jar" src="images/jar-outline.svg">
+        <img role="presentation" style="z-index:300" class="gumball-jar" src="images/jar-foreground.svg">
+        <img role="presentation" style="z-index:-1" class="gumball-jar" src="images/jar-background.svg">
+        <svg role="presentation" id="sandbox" viewBox="0 0 500 675" xmlns="http://www.w3.org/2000/svg">
 
         </svg>
         <!-- <div id="sandbox">
@@ -408,6 +408,7 @@
         function createBodyRect(id, x, y, width, height, angle = 0) {
             let elem = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
             elem.id = id;
+            elem.role = "presentation";
             elem.classList.add('jar');
             elem.setAttribute("x", x - width / 2);
             elem.setAttribute("y", y - height / 2);
@@ -476,16 +477,20 @@
             elem.classList.add("current");
 
             let circle = document.createElement("div");
+            circle.role = "alert";
+            circle.ariaLabel = `${quizCard.fgColorName} on ${quizCard.bgColorName}`
             circle.classList.add("gumball");
             circle.style.setProperty('--gumball-bg', quizCard.cssBgColor);
 
             elem.appendChild(circle);
 
             let fg = document.createElement("div");
+            fg.ariaHidden = "true";
             fg.textContent = quizCard.fgColorName;
             fg.style.color = quizCard.cssFgColor;
             circle.appendChild(fg);
             let bg = document.createElement("div");
+            bg.ariaHidden = "true";
             bg.textContent = quizCard.bgColorName;
             bg.style.color = quizCard.cssFgColor;;
             circle.appendChild(bg);
@@ -518,14 +523,17 @@
             switch (currentGumball.quizCard.contrastRating) {
                 case 'AAA':
                     contrastStamp = document.getElementById("aaa-stamp");
+                    contrastStamp.ariaLabel = `AAA stamp: ${currentGumball.quizCard.contrast.toFixed(2)}`;
                     document.getElementById("aaa-contrast").textContent = currentGumball.quizCard.contrast.toFixed(2);
                     break;
                 case 'AA':
                     contrastStamp = document.getElementById("aa-stamp");
+                    contrastStamp.ariaLabel = `AA stamp: ${currentGumball.quizCard.contrast.toFixed(2)}`;
                     document.getElementById("aa-contrast").textContent = currentGumball.quizCard.contrast.toFixed(2);
                     break;
                 case 'FAIL':
                     contrastStamp = document.getElementById("fail-stamp");
+                    contrastStamp.ariaLabel = `FAIL stamp: ${currentGumball.quizCard.contrast.toFixed(2)}`;
                     document.getElementById("fail-contrast").textContent = currentGumball.quizCard.contrast.toFixed(2);
                     // contrastStamp.style.color = "var(--fail-color)";
                     break;
