@@ -6,8 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AA! AAA!</title>
     <link rel="icon" type="image/x-icon" href="images/contrast-icon.svg">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/matter-wrap@0.2.0/build/matter-wrap.min.js"></script>
     <script src="https://unpkg.com/color-name-list/dist/colornames.umd.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Bangers&display=swap');
@@ -114,18 +112,6 @@
             display: block;
         }
 
-        @keyframes shimmer {
-
-            0%,
-            100% {
-                box-shadow: 0 0 5px rgba(255, 255, 255, 0.3), 0 0 10px rgba(255, 255, 255, 0.3), 0 0 15px rgba(255, 255, 255, 0.3);
-            }
-
-            50% {
-                box-shadow: 0 0 20px rgba(255, 255, 255, 0.9), 0 0 30px rgba(255, 255, 255, 0.9), 0 0 40px rgba(255, 255, 255, 0.9);
-            }
-        }
-
         #buttons {
             display: flex;
             gap: 10px;
@@ -146,10 +132,6 @@
 
         button:active {
             transform: scale(1.2);
-        }
-
-        button.shimmer {
-            animation: shimmer 0.6s infinite;
         }
 
         button:disabled {
@@ -370,13 +352,20 @@
 
     <script type="module">
         import { QuizGenerator } from "./js/contrast-quiz.mjs";
+        import { GumballEngine } from "./js/gumballs.mjs";
+
+        const debugMode = location.hash.includes("debug");
+        const cheatMode = location.hash.includes("cheat");
+
+        const gumballEngine = new GumballEngine(debugMode);
         const quizGenerator = QuizGenerator();
 
         const btnFail = document.getElementById('fail-btn');
         const btnAA = document.getElementById('aa-btn');
         const btnAAA = document.getElementById('aaa-btn');
-        const marquee = document.getElementById('current-ball-marquee');
 
+        console.log(gumballEngine)
+        gumballEngine.render();
 
         // Load the sounds and attempt to preload them so that they're ready
         // to go immediately. Sometimes Firefox lags a bit on playback but we
@@ -386,170 +375,25 @@
         buzzerWrong.load();
         dingCorrect.load();
 
-        let debugMode = location.hash.includes("debug");
-        let cheatMode = location.hash.includes("cheat");
-        const ballOverlap = 10;
-
-
-        const { Engine, Render, World, Bodies, Body, Composite, Events, Runner } = Matter;
-
-        const engine = Engine.create();
-        const render = Render.create({
-            // element: document.getElementById('game-container'),
-            engine: engine,
-            options: {
-                width: 500, // Increased width
-                height: 725, // Increased height
-                wireframes: false,
-                background: '#f0f0f0'
-            }
-        });
-
-        // Create jar-like structure with flat bottom and curved corners
-        const wallThickness = 20;
-        const jarWidth = 400;
-        const jarHeight = 500;
-        const jarBottomThickness = 20;
-        const cornerRadius = 30;
-
-        const sandbox = document.getElementById("sandbox");
-        function createBodyRect(id, x, y, width, height, angle = 0) {
-            let elem = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            elem.id = id;
-            elem.role = "presentation";
-            elem.classList.add('jar');
-            elem.setAttribute("x", x - width / 2);
-            elem.setAttribute("y", y - height / 2);
-            elem.setAttribute("width", width);
-            elem.setAttribute("height", height);
-            elem.classList.add("jar");
-            sandbox.appendChild(elem);
-            return Bodies.rectangle(x, y, width, height, {
-                elem,
-                width,
-                height,
-                isStatic: true,
-                scaleFactor: 1,
-                angle,
-            });
-        }
-
-        const bottom = createBodyRect("jar-bottom", 250, 735, jarWidth, jarBottomThickness + ballOverlap);
-        const leftWall = createBodyRect("jar-leftWall", 50, 475, wallThickness + ballOverlap, jarHeight);
-        const rightWall = createBodyRect("jar-rightWall", 450, 475, wallThickness + ballOverlap, jarHeight);
-        const bottomLeftCorner = createBodyRect("jar-bottomLeftCorner", 75, 724, 20, 75, -0.14);
-        const bottomRightCorner = createBodyRect("jar-bottomRightCorner", 430, 700, 20, 75, 0.1);
-        World.add(engine.world, [bottom, leftWall, rightWall, bottomLeftCorner, bottomRightCorner]);
-
-        let counter = 0;
-
-        (function rerender() {
-            Engine.update(engine);
-            if (debugMode && counter++ % 60 == 0) {
-                for (let body of engine.world.bodies) {
-                    console.log(body);
-                }
-            }
-            for (let body of engine.world.bodies) {
-                let elem = body.elem;
-                if (!elem) {
-                    continue;
-                }
-                let bounds = body.bounds;
-                if (elem instanceof SVGRectElement) {
-                    elem.setAttribute("x", bounds.min.x);
-                    elem.setAttribute("y", bounds.min.y);
-                    elem.setAttribute("width", body.width);
-                    elem.setAttribute("height", body.height);
-                    elem.setAttribute("transform", `rotate(${body.angle * 360})`);
-                } else if (elem instanceof SVGForeignObjectElement) {
-                    // Gumballs
-                    elem.setAttribute("transform", `translate(${body.position.x}, ${body.position.y}) rotate(${body.angle * 360}) scale(${body.scaleFactor})`);
-                }
-
-            }
-
-            requestAnimationFrame(rerender);
-        })();
-
         let score = 0;
-        let currentGumball = null;
-        let first = true;
-        function createGumball(x, y, quizCard, radius = 20) {
-            let elem = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-            elem.setAttribute("x", -radius);
-            elem.setAttribute("y", -radius);
-            elem.setAttribute("width", radius * 2);
-            elem.setAttribute("height", radius * 2);
-            elem.style.transform = `translate(${x}, ${y})`;
-            elem.classList.add("current");
-
-            let circle = document.createElement("div");
-            circle.role = "listitem";
-            circle.ariaLabel = `${quizCard.fgColorName} on ${quizCard.bgColorName}`;
-            if (first) {
-                setTimeout(() => {
-                marquee.textContent = circle.ariaLabel;
-            }, 1000);
-            } else {
-                marquee.textContent = circle.ariaLabel;
-            }
-            circle.classList.add("gumball");
-            circle.style.setProperty('--gumball-bg', quizCard.cssBgColor);
-
-            elem.appendChild(circle);
-
-            let fg = document.createElement("div");
-            fg.ariaHidden = "true";
-            fg.textContent = quizCard.fgColorName;
-            fg.style.color = quizCard.cssFgColor;
-            circle.appendChild(fg);
-            let bg = document.createElement("div");
-            bg.ariaHidden = "true";
-            bg.textContent = quizCard.bgColorName;
-            bg.style.color = quizCard.cssFgColor;;
-            circle.appendChild(bg);
-
-            document.getElementById("put-gumballs-here").appendChild(elem);
-            const gumball = Bodies.circle(x, y, radius - ballOverlap, {
-                quizCard,
-                elem,
-                restitution: 0.5,
-                friction: 0.005,
-                scaleFactor: 1.0
-            });
-
-            return gumball;
-        }
-
-        function createNewGumball() {
-            const quizCard = quizGenerator.next().value;
-            currentGumball = createGumball(250, 100, quizCard, 80); // Lowered initial position and doubled size
-            Body.setStatic(currentGumball, true);
-            World.add(engine.world, currentGumball);
-            resetTimer(); // Reset the timer for each new gumball
-            if (debugMode) {
-                document.getElementById('debug-info').textContent = `Contrast Ratio: ${currentGumball.quizCard.contrast.toFixed(2)}`;
-            }
-        }
 
         function slapStamp() {
             let contrastStamp = null;
-            switch (currentGumball.quizCard.contrastRating) {
+            switch (gumballEngine.current.quizCard.contrastRating) {
                 case 'AAA':
                     contrastStamp = document.getElementById("aaa-stamp");
-                    contrastStamp.ariaLabel = `AAA stamp: ${currentGumball.quizCard.contrast.toFixed(2)}`;
-                    document.getElementById("aaa-contrast").textContent = currentGumball.quizCard.contrast.toFixed(2);
+                    contrastStamp.ariaLabel = `AAA stamp: ${gumballEngine.current.quizCard.contrast.toFixed(2)}`;
+                    document.getElementById("aaa-contrast").textContent = gumballEngine.current.quizCard.contrast.toFixed(2);
                     break;
                 case 'AA':
                     contrastStamp = document.getElementById("aa-stamp");
-                    contrastStamp.ariaLabel = `AA stamp: ${currentGumball.quizCard.contrast.toFixed(2)}`;
-                    document.getElementById("aa-contrast").textContent = currentGumball.quizCard.contrast.toFixed(2);
+                    contrastStamp.ariaLabel = `AA stamp: ${gumballEngine.current.quizCard.contrast.toFixed(2)}`;
+                    document.getElementById("aa-contrast").textContent = gumballEngine.current.quizCard.contrast.toFixed(2);
                     break;
                 case 'FAIL':
                     contrastStamp = document.getElementById("fail-stamp");
-                    contrastStamp.ariaLabel = `FAIL stamp: ${currentGumball.quizCard.contrast.toFixed(2)}`;
-                    document.getElementById("fail-contrast").textContent = currentGumball.quizCard.contrast.toFixed(2);
+                    contrastStamp.ariaLabel = `FAIL stamp: ${gumballEngine.current.quizCard.contrast.toFixed(2)}`;
+                    document.getElementById("fail-contrast").textContent = gumballEngine.current.quizCard.contrast.toFixed(2);
                     // contrastStamp.style.color = "var(--fail-color)";
                     break;
             }
@@ -557,32 +401,10 @@
             contrastStamp.classList.add("show");
         }
 
-        function dropCurrentGumball() {
-            dingCorrect.currentTime = 0;
-            dingCorrect.play();
-            slapStamp();
-            if (currentGumball) {
-                let scale = 1;
-                const scaleStep = 2 / 15;
-                currentGumball.elem.classList.remove("current");
-                const interval = setInterval(() => {
-                    scale -= scaleStep;
-                    if (scale <= 0.15) {
-                        scale = 0.15;
-                        clearInterval(interval);
-                        Body.setStatic(currentGumball, false);
-                        Body.applyForce(currentGumball, { x: currentGumball.position.x, y: currentGumball.position.y }, { x: (Math.random() - 0.5) * 0.3, y: -.2 });
-                        Body.setAngularVelocity(currentGumball, (Math.random() - 0.5) * 0.1); // Apply an angular speed for spinning
-                        currentGumball = null;
-                        score++;
-                        document.getElementById('score').textContent = `Score: ${score}`;
-                        setTimeout(createNewGumball, 1000); // Delay creation of next gumball
-                    } else {
-                        Body.scale(currentGumball, 1 - scaleStep, 1 - scaleStep);
-                        currentGumball.scaleFactor *= 1 - scaleStep;
-                    }
-                }, 16); // Approx. 60fps
-            }
+        function newQuizRound() {
+            const quizCard = quizGenerator.next().value;
+            gumballEngine.createNewGumball(quizCard);
+            resetTimer(); // Reset the timer for each new gumball
         }
 
         function gameOver(userChoice) {
@@ -594,21 +416,14 @@
             btnAAA.disabled = true;
             clearInterval(interval); // Stop the timer
 
-            let contrastDesignation = currentGumball.quizCard.contrastRating;
-            let actualContrast = currentGumball.quizCard.contrast.toFixed(2);
+            let contrastDesignation = gumballEngine.current.quizCard.contrastRating;
+            let actualContrast = gumballEngine.current.quizCard.contrast.toFixed(2);
 
             document.getElementById('chosen-option').innerHTML = `You chose: ${userChoice}.<br>Actual contrast: ${actualContrast} (${contrastDesignation})`;
         }
 
         document.getElementById('reset-btn').addEventListener('click', () => {
             location.reload();
-        });
-
-        Events.on(render, 'afterRender', () => {
-            const ctx = render.context;
-            Composite.allBodies(engine.world).forEach(body => {
-                renderGumballText(ctx, body);
-            });
         });
 
         window.addEventListener('transitionend', evt => {
@@ -634,11 +449,16 @@
             }
         });
 
-        document.getElementById('buttons').addEventListener('click', evt => {
-            if (evt.target instanceof HTMLButtonElement && currentGumball) {
-                if (evt.target.dataset.rating == currentGumball.quizCard.contrastRating || cheatMode) {
-                    dropCurrentGumball();
-                    resetTimer();
+        document.getElementById('buttons').addEventListener('click', async evt => {
+            if (evt.target instanceof HTMLButtonElement && gumballEngine.current) {
+                if (evt.target.dataset.rating == gumballEngine.current.quizCard.contrastRating || cheatMode) {
+                    dingCorrect.currentTime = 0;
+                    dingCorrect.play();
+                    slapStamp();
+                    await gumballEngine.dropCurrent();
+                    score++;
+                    document.getElementById('score').textContent = `Score: ${score}`;
+                    setTimeout(newQuizRound, 1000); // Delay creation of next gumball
                 } else {
                     gameOver(evt.target.dataset.rating);
                 }
@@ -654,7 +474,7 @@
             document.documentElement.style.setProperty('--time-left', 100);
             interval = setInterval(() => {
                 timeLeft -= 16;
-                if (currentGumball) {
+                if (gumballEngine.current) {
                     document.documentElement.style.setProperty('--time-left', (timeLeft / duration) * 100);
                     let newTimeInSeconds = Math.ceil(timeLeft / 1000);
                     if (newTimeInSeconds != timeLeftInSeconds) {
@@ -670,10 +490,10 @@
         }
 
         function resetTimer() {
-            startTimer(currentGumball.quizCard.timerDuration);
+            startTimer(gumballEngine.current.quizCard.timerDuration);
         }
 
-        createNewGumball();
+        newQuizRound();
     </script>
 </body>
 
