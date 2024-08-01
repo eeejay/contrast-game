@@ -26,6 +26,33 @@ class GumballEngine {
     // Create jar-like structure with flat bottom and curved corners
 
     const sandbox = document.getElementById("sandbox");
+    sandbox.setAttribute('viewBox', "0 0 500 725");
+    sandbox.role = "list";
+
+    function addJarImage(filename) {
+      let elem = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+      elem.setAttribute("href", filename);
+      elem.setAttribute("x", "0");
+      elem.setAttribute("y", "50");
+      elem.setAttribute("width", "500");
+      elem.setAttribute("height", "725");
+      elem.role = "presentation";
+
+      sandbox.appendChild(elem);
+    }
+
+    function addGroup(id) {
+      let elem = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      elem.id = id;
+      elem.role = "presentation";
+      sandbox.appendChild(elem);
+    }
+
+    addJarImage("images/jar-background.svg");
+    addGroup("put-gumballs-here")
+    addJarImage("images/jar-outline.svg");
+    addJarImage("images/jar-foreground.svg");
+
     function createBodyRect(id, x, y, width, height, angle = 0) {
       let elem = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
       elem.id = id;
