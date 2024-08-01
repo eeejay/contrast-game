@@ -36,7 +36,7 @@
             max-width: min(800px, 100vw);
             height: 75%;
             display: flex;
-            /* height: 675px; */
+            /* height: 725px; */
         }
 
         #score {
@@ -129,6 +129,7 @@
         #buttons {
             display: flex;
             gap: 10px;
+            margin-bottom: 1em;
         }
 
         button {
@@ -326,11 +327,11 @@
     </div>
     <div id="score" role="status">Score: 0</div>
     <div id="game-container" role="presentation">
-        <svg role="list" id="sandbox" viewBox="0 0 500 675" xmlns="http://www.w3.org/2000/svg">
-            <image role="presentation" x="0" y="0" width="500" height="675" href="images/jar-background.svg" />
+        <svg role="list" id="sandbox" viewBox="0 0 500 725" xmlns="http://www.w3.org/2000/svg">
+            <image role="presentation" x="0" y="50" width="500" height="725" href="images/jar-background.svg" />
             <g role="presentation" id="put-gumballs-here"></g>
-            <image role="presentation" x="0" y="0" width="500" height="675" href="images/jar-outline.svg" />
-            <image role="presentation" x="0" y="0" width="500" height="675" href="images/jar-foreground.svg" />
+            <image role="presentation" x="0" y="50" width="500" height="725" href="images/jar-outline.svg" />
+            <image role="presentation" x="0" y="50" width="500" height="725" href="images/jar-foreground.svg" />
         </svg>
         <div id="stamps" role="presentation">
             <div role="image" id="fail-stamp" class="stamp"></div>
@@ -398,7 +399,7 @@
             engine: engine,
             options: {
                 width: 500, // Increased width
-                height: 675, // Increased height
+                height: 725, // Increased height
                 wireframes: false,
                 background: '#f0f0f0'
             }
@@ -433,11 +434,11 @@
             });
         }
 
-        const bottom = createBodyRect("jar-bottom", 250, 650, jarWidth, jarBottomThickness + ballOverlap);
-        const leftWall = createBodyRect("jar-leftWall", 50, 400, wallThickness + ballOverlap, jarHeight);
-        const rightWall = createBodyRect("jar-rightWall", 450, 400, wallThickness + ballOverlap, jarHeight);
-        const bottomLeftCorner = createBodyRect("jar-bottomLeftCorner", 75, 649, 20, 75, -0.14);
-        const bottomRightCorner = createBodyRect("jar-bottomRightCorner", 430, 615, 20, 75, 0.1);
+        const bottom = createBodyRect("jar-bottom", 250, 735, jarWidth, jarBottomThickness + ballOverlap);
+        const leftWall = createBodyRect("jar-leftWall", 50, 475, wallThickness + ballOverlap, jarHeight);
+        const rightWall = createBodyRect("jar-rightWall", 450, 475, wallThickness + ballOverlap, jarHeight);
+        const bottomLeftCorner = createBodyRect("jar-bottomLeftCorner", 75, 724, 20, 75, -0.14);
+        const bottomRightCorner = createBodyRect("jar-bottomRightCorner", 430, 700, 20, 75, 0.1);
         World.add(engine.world, [bottom, leftWall, rightWall, bottomLeftCorner, bottomRightCorner]);
 
         let counter = 0;
@@ -523,7 +524,7 @@
 
         function createNewGumball() {
             const quizCard = quizGenerator.next().value;
-            currentGumball = createGumball(250, 50, quizCard, 80); // Lowered initial position and doubled size
+            currentGumball = createGumball(250, 100, quizCard, 80); // Lowered initial position and doubled size
             Body.setStatic(currentGumball, true);
             World.add(engine.world, currentGumball);
             resetTimer(); // Reset the timer for each new gumball
