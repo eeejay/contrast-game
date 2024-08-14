@@ -178,49 +178,38 @@
             overflow: visible;
         }
 
-        .gumball {
-            border-radius: 50%;
-            width: 100%;
-            height: 100%;
+        .gumball-text {
             display: flex;
-            flex-direction: column;
             justify-content: center;
-            align-items: center;
-            transform-origin: center;
-            position: relative;
-            z-index: -3;
-            background-color: var(--gumball-bg);
-        }
-
-        .gumball>div {
-            text-align: center;
-            width: 75%;
-            padding: 0.5em 0;
-            z-index: 0;
-        }
-
-        .gumball>div:first-child {
-            border-bottom: solid 1px;
-        }
-
-        .current .gumball:before {
-            content: "";
-            position: absolute;
-            border-radius: 50%;
-            width: calc(100% + 15px);
-            height: calc(100% + 15px);
-            background: conic-gradient(#000 calc(var(--time-left)*1%), #0000 0);
-            z-index: -2;
-        }
-
-        .current .gumball:after {
-            content: "";
-            position: absolute;
-            border-radius: 50%;
-            z-index: -1;
-            width: 100%;
             height: 100%;
-            background-color: var(--gumball-bg);
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .gumball-text > div {
+            width: 85%;
+            text-align: center;
+            color: black;
+            padding: 0.5em 0;
+        }
+
+        .gumball-text > div:first-child {
+            border-bottom: 1px solid black;
+        }
+
+        .gumball-timer {
+            stroke-dasharray: 502;
+            stroke-width: 6;
+            stroke: #000;
+            fill: none;
+            rotate: -90deg;
+            stroke-linecap: round;
+            stroke-dashoffset: calc(502px - 1px * (var(--time-left)/100) * 502);
+        }
+
+        .gumball:not(.current) .gumball-timer,
+        .over .gumball-timer {
+            visibility: hidden;
         }
 
         #stamps {

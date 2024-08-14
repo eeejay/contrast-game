@@ -87,39 +87,43 @@ class GumballEngine {
   }
 
   createGumball(x, y, quizCard, radius) {
-    let elem = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-    elem.setAttribute("x", -radius);
-    elem.setAttribute("y", -radius);
+    let elem = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     elem.setAttribute("width", radius * 2);
     elem.setAttribute("height", radius * 2);
-    elem.style.transform = `translate(${x}, ${y})`;
     elem.classList.add("current");
+    elem.classList.add("gumball");
 
-    let circle = document.createElement("div");
-    circle.role = "listitem";
-    circle.ariaLabel = `${quizCard.fgColorName} on ${quizCard.bgColorName}`;
-    if (this.first) {
-      setTimeout(() => {
-        this.marquee.textContent = circle.ariaLabel;
-      }, 1000);
-    } else {
-      this.marquee.textContent = circle.ariaLabel;
-    }
-    circle.classList.add("gumball");
-    circle.style.setProperty('--gumball-bg', quizCard.cssBgColor);
-
+    let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute("r", radius);
+    circle.setAttribute("fill", quizCard.cssBgColor);
     elem.appendChild(circle);
 
-    let fg = document.createElement("div");
-    fg.ariaHidden = "true";
-    fg.textContent = quizCard.fgColorName;
-    fg.style.color = quizCard.cssFgColor;
-    circle.appendChild(fg);
-    let bg = document.createElement("div");
-    bg.ariaHidden = "true";
-    bg.textContent = quizCard.bgColorName;
-    bg.style.color = quizCard.cssFgColor;;
-    circle.appendChild(bg);
+    let timerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    timerCircle.setAttribute("r", radius);
+    timerCircle.classList.add("gumball-timer");
+    elem.appendChild(timerCircle);
+
+    let fo = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+    fo.setAttribute("x", -radius);
+    fo.setAttribute("y", -radius);
+    fo.setAttribute("width", radius * 2);
+    fo.setAttribute("height", radius * 2);
+    elem.appendChild(fo);
+
+    let circleText = document.createElement('div');
+    circleText.classList.add("gumball-text");
+    fo.appendChild(circleText);
+
+    let fgText = document.createElement('div');
+    fgText.textContent = quizCard.fgColorName;
+    fgText.style.color = quizCard.cssFgColor;
+    fgText.style.borderColor = quizCard.cssFgColor;
+    circleText.appendChild(fgText);
+
+    let bgText = document.createElement('div');
+    bgText.textContent = quizCard.bgColorName;
+    bgText.style.color = quizCard.cssFgColor;
+    circleText.appendChild(bgText);
 
     document.getElementById("put-gumballs-here").appendChild(elem);
     const gumball = Bodies.circle(x, y, radius - ballOverlap, {
@@ -181,7 +185,7 @@ class GumballEngine {
         elem.setAttribute("width", body.width);
         elem.setAttribute("height", body.height);
         elem.setAttribute("transform", `rotate(${body.angle * 360})`);
-      } else if (elem instanceof SVGForeignObjectElement) {
+      } else if (elem instanceof SVGGElement) {
         // Gumballs
         elem.setAttribute("transform", `translate(${body.position.x}, ${body.position.y}) rotate(${body.angle * 360}) scale(${body.scaleFactor})`);
       }
